@@ -1,0 +1,169 @@
+[2026-05-20 09:00:01] [CLIENT] [INFO] Stage 2 Thinking Agent starting up
+[2026-05-20 09:00:01] [CLIENT] [INFO] MCP Server URL: http://localhost:8000/mcp
+[2026-05-20 09:00:01] [CLIENT] [INFO] Initialising FastMCP Client → http://localhost:8000/mcp
+
+=== TURN 1 ===
+[2026-05-20 09:00:02] [CLIENT] [INFO] Query submitted to agent: 'What is the Model Context Protocol (MCP) and how does it differ from standard LangChain tool use? Which approach is better suited for enterprise-grade agentic systems?'
+[2026-05-20 09:00:02] [CLIENT] [INFO] remote_crag_tool invoked | query='Model Context Protocol MCP enterprise agentic systems'
+[2026-05-20 09:00:02] [CLIENT] [INFO] Reading server resource 'knowledge://domain/Model%20Context%20Protocol%20MCP%20enterprise%20agentic%20systems'
+[2026-05-20 09:00:02] [SERVER] [INFO] Connection attempt | endpoint=/health | client_ip=127.0.0.1
+[2026-05-20 09:00:02] [SERVER] [INFO] [2026-05-20 09:00:02] CRAG resource invoked | query='Model Context Protocol MCP enterprise agentic systems'
+[2026-05-20 09:00:02] [SERVER] [DEBUG] CRAG Step 1 — dispatching Multi-Query Expansion to client LLM
+[2026-05-20 09:00:02] [CLIENT] [INFO] Sampling request received from server | request_id=req-a1b2
+[2026-05-20 09:00:02] [CLIENT] [INFO] Sampling LLM initialised: llama-3.3-70b-versatile
+[2026-05-20 09:00:03] [CLIENT] [INFO] Sampling response generated | tokens≈34
+[2026-05-20 09:00:03] [SERVER] [INFO] Multi-query expansion: 4 queries ready
+[2026-05-20 09:00:03] [SERVER] [DEBUG] CRAG Step 2 — Hierarchical Indexing retrieval started
+[2026-05-20 09:00:03] [SERVER] [INFO] Hierarchical retrieval: 7 unique chunks found
+[2026-05-20 09:00:03] [SERVER] [DEBUG] CRAG Step 3 — Initiating ToT Evaluation on retrieved chunks
+[2026-05-20 09:00:03] [SERVER] [INFO] ToT scores — Specificity:0.81 Completeness:0.74 Novelty:0.69 | avg=0.75
+[2026-05-20 09:00:03] [SERVER] [INFO] ToT evaluation complete | avg=0.75 | scores={'specificity': 0.81, 'completeness': 0.74, 'novelty': 0.69}
+[2026-05-20 09:00:03] [SERVER] [INFO] CRAG resource complete | fallback_used=False
+[2026-05-20 09:00:03] [CLIENT] [INFO] CRAGResponse validated | fallback_used=False | avg_tot=0.75 | queries=4
+[2026-05-20 09:00:04] [CLIENT] [INFO] remote_reflection_tool invoked by agent
+[2026-05-20 09:00:04] [CLIENT] [DEBUG] ReflectionRequest validated | query='What is the Model Context Protocol (MCP)'
+[2026-05-20 09:00:04] [CLIENT] [INFO] Calling server tool 'reflection_tool'
+[2026-05-20 09:00:04] [SERVER] [INFO] Connection attempt | endpoint=/health | client_ip=127.0.0.1
+[2026-05-20 09:00:04] [SERVER] [INFO] [2026-05-20 09:00:04] reflection_tool invoked — starting 2-stage critique loop
+[2026-05-20 09:00:04] [SERVER] [DEBUG] Stage 1 — dispatching Critique sampling request to client LLM
+[2026-05-20 09:00:04] [CLIENT] [INFO] Sampling request received from server | request_id=req-c3d4
+[2026-05-20 09:00:06] [CLIENT] [INFO] Sampling response generated | tokens≈89
+[2026-05-20 09:00:06] [SERVER] [INFO] Stage 1 complete | is_sufficient=False
+[2026-05-20 09:00:06] [SERVER] [DEBUG] Stage 2 — dispatching Correction sampling request to client LLM
+[2026-05-20 09:00:06] [CLIENT] [INFO] Sampling request received from server | request_id=req-e5f6
+[2026-05-20 09:00:08] [CLIENT] [INFO] Sampling response generated | tokens≈172
+[2026-05-20 09:00:08] [SERVER] [INFO] Stage 2 correction complete — refined answer assembled
+[2026-05-20 09:00:08] [CLIENT] [INFO] ReflectionResponse received | is_sufficient=False
+[2026-05-20 09:00:08] [CLIENT] [INFO] Agent completed execution
+[2026-05-20 09:00:08] [CLIENT] [INFO] Final Answer: MCP (Model Context Protocol) is an open standard that decouples AI agents from tools via a client-server HTTP protocol. Unlike monolithic LangChain tool use — where tools are Python functions co-located with the agent — MCP exposes tools and resources as network-addressable microservices. This enables independent deployment, multi-agent consumption, and MCP Sampling (server delegates LLM calls to client model). For enterprise systems requiring modularity, observability, and security isolation, MCP is the superior architecture.
+[2026-05-20 09:00:08] [CLIENT] [INFO] Total intermediate steps: 3
+[2026-05-20 09:00:08] [CLIENT] [DEBUG] Step 1 | tool=tavily_search_results_json | input=Model Context Protocol 2025 | obs=[{"url":"https://modelcontextprotocol.io","content":"MCP is an open protocol..."}]
+[2026-05-20 09:00:08] [CLIENT] [DEBUG] Step 2 | tool=remote_crag_tool | input=Model Context Protocol MCP enterprise | obs=[MCP_PROTOCOL — L2-primitives] MCP defines five primitives: Tools, Resources, Prompts, Sampling, Elicitation...
+[2026-05-20 09:00:08] [CLIENT] [DEBUG] Step 3 | tool=remote_reflection_tool | input={"draft_answer":"MCP is a protocol...","original_query":"What is MCP..."} | obs=MCP (Model Context Protocol) is an open standard...
+
+=== TURN 2 ===
+[2026-05-20 09:01:00] [CLIENT] [INFO] Query submitted to agent: 'Explain Corrective RAG (CRAG) and how Tree-of-Thought evaluation improves retrieval quality over standard RAG.'
+[2026-05-20 09:01:00] [CLIENT] [INFO] remote_crag_tool invoked | query='Corrective RAG CRAG Tree-of-Thought retrieval quality'
+[2026-05-20 09:01:00] [CLIENT] [INFO] Reading server resource 'knowledge://domain/Corrective%20RAG%20CRAG%20Tree-of-Thought%20retrieval%20quality'
+[2026-05-20 09:01:01] [SERVER] [INFO] Connection attempt | endpoint=/health | client_ip=127.0.0.1
+[2026-05-20 09:01:01] [SERVER] [INFO] [2026-05-20 09:01:01] CRAG resource invoked | query='Corrective RAG CRAG Tree-of-Thought retrieval quality'
+[2026-05-20 09:01:01] [SERVER] [DEBUG] CRAG Step 1 — dispatching Multi-Query Expansion to client LLM
+[2026-05-20 09:01:01] [CLIENT] [INFO] Sampling request received from server | request_id=req-g7h8
+[2026-05-20 09:01:02] [CLIENT] [INFO] Sampling response generated | tokens≈31
+[2026-05-20 09:01:02] [SERVER] [INFO] Multi-query expansion: 4 queries ready
+[2026-05-20 09:01:02] [SERVER] [DEBUG] CRAG Step 2 — Hierarchical Indexing retrieval started
+[2026-05-20 09:01:02] [SERVER] [INFO] Hierarchical retrieval: 5 unique chunks found
+[2026-05-20 09:01:02] [SERVER] [DEBUG] CRAG Step 3 — Initiating ToT Evaluation on retrieved chunks
+[2026-05-20 09:01:02] [SERVER] [INFO] ToT scores — Specificity:0.88 Completeness:0.79 Novelty:0.72 | avg=0.80
+[2026-05-20 09:01:02] [SERVER] [INFO] CRAG resource complete | fallback_used=False
+[2026-05-20 09:01:02] [CLIENT] [INFO] CRAGResponse validated | fallback_used=False | avg_tot=0.80 | queries=4
+[2026-05-20 09:01:03] [CLIENT] [INFO] remote_reflection_tool invoked by agent
+[2026-05-20 09:01:03] [CLIENT] [DEBUG] ReflectionRequest validated | query='Explain Corrective RAG (CRAG) and how Tree-of-Thought'
+[2026-05-20 09:01:03] [CLIENT] [INFO] Calling server tool 'reflection_tool'
+[2026-05-20 09:01:04] [SERVER] [INFO] [2026-05-20 09:01:04] reflection_tool invoked — starting 2-stage critique loop
+[2026-05-20 09:01:04] [SERVER] [DEBUG] Stage 1 — dispatching Critique sampling request to client LLM
+[2026-05-20 09:01:04] [CLIENT] [INFO] Sampling request received from server | request_id=req-i9j0
+[2026-05-20 09:01:06] [CLIENT] [INFO] Sampling response generated | tokens≈76
+[2026-05-20 09:01:06] [SERVER] [INFO] Stage 1 complete | is_sufficient=True
+[2026-05-20 09:01:06] [SERVER] [INFO] Stage 2 skipped — critic marked draft as sufficient
+[2026-05-20 09:01:06] [CLIENT] [INFO] ReflectionResponse received | is_sufficient=True
+[2026-05-20 09:01:06] [CLIENT] [INFO] Agent completed execution
+[2026-05-20 09:01:06] [CLIENT] [INFO] Final Answer: Corrective RAG (CRAG) extends standard RAG by adding a relevance-grading step after retrieval. Standard RAG blindly prepends top-k chunks to the prompt regardless of quality. CRAG grades each chunk — relevant chunks proceed, irrelevant ones trigger a Tavily web search fallback. Hierarchical CRAG further adds multi-query expansion (3 semantic variants) and ToT evaluation. The 3-path ToT (Specificity, Completeness, Novelty) scores retrieved chunks across three independent dimensions before committing to context — preventing low-quality chunks from poisoning the generation step.
+[2026-05-20 09:01:06] [CLIENT] [INFO] Total intermediate steps: 3
+[2026-05-20 09:01:06] [CLIENT] [DEBUG] Step 1 | tool=tavily_search_results_json | input=Corrective RAG CRAG 2025 | obs=[{"url":"https://arxiv.org","content":"CRAG adds a corrective mechanism..."}]
+[2026-05-20 09:01:06] [CLIENT] [DEBUG] Step 2 | tool=remote_crag_tool | input=Corrective RAG CRAG Tree-of-Thought retrieval quality | obs=[RAG_CRAG — L2-crag] Corrective RAG pipeline: Retrieve → Grade → Correct → Generate...
+[2026-05-20 09:01:06] [CLIENT] [DEBUG] Step 3 | tool=remote_reflection_tool | input={"draft_answer":"CRAG extends RAG...","original_query":"Explain CRAG..."} | obs=Corrective RAG (CRAG) extends standard RAG by adding a relevance-grading step...
+[2026-05-20 09:01:06] [CLIENT] [INFO] Agent session complete — logs written to agent_system.log
+[2026-05-24 01:02:24] [CLIENT] [INFO] Stage 2 Thinking Agent starting up
+[2026-05-24 01:02:24] [CLIENT] [INFO] MCP Server URL: http://localhost:8000/mcp
+[2026-05-24 01:07:55] [CLIENT] [INFO] Stage 2 Thinking Agent starting up
+[2026-05-24 01:07:55] [CLIENT] [INFO] MCP Server URL: http://localhost:8000/mcp
+[2026-05-24 01:07:58] [CLIENT] [INFO] Query submitted to agent: 'What is the Model Context Protocol (MCP) and how does it differ from standard LangChain tool use? Which approach is better suited for enterprise-grade agentic systems requiring modularity and observability?'
+[2026-05-24 01:08:05] [CLIENT] [INFO] remote_crag_tool invoked | query='MCP advantages for enterprise-grade agentic systems'
+[2026-05-24 01:08:05] [CLIENT] [INFO] Reading server resource 'knowledge://domain/MCP%20advantages%20for%20enterprise-grade%20agentic%20systems'
+[2026-05-24 01:08:05] [CLIENT] [INFO] Initialising FastMCP Client → http://localhost:8000/mcp
+[2026-05-24 01:08:08] [SERVER] [INFO] [2026-05-24 01:08:08] CRAG resource invoked | query='MCP advantages for enterprise-grade agentic systems'
+[2026-05-24 01:08:08] [SERVER] [DEBUG] CRAG Step 1 — dispatching Multi-Query Expansion to client LLM
+[2026-05-24 01:08:08] [CLIENT] [INFO] Sampling request received from server | request_id=0
+[2026-05-24 01:08:10] [CLIENT] [INFO] Sampling LLM initialised: llama-3.3-70b-versatile
+[2026-05-24 01:08:10] [CLIENT] [INFO] Sampling response generated | tokens≈25
+[2026-05-24 01:08:11] [SERVER] [INFO] Multi-query expansion: 4 queries ready
+[2026-05-24 01:08:11] [SERVER] [DEBUG] CRAG Step 2 — Hierarchical Indexing retrieval started
+[2026-05-24 01:08:11] [SERVER] [INFO] Hierarchical retrieval: 6 unique chunks found
+[2026-05-24 01:08:11] [SERVER] [DEBUG] CRAG Step 3 — Initiating ToT Evaluation on retrieved chunks
+[2026-05-24 01:08:14] [SERVER] [INFO] ToT scores — Specificity:0.17 Completeness:0.11 Novelty:0.23 | avg=0.17
+[2026-05-24 01:08:14] [SERVER] [INFO] Tavily fallback triggered — avg ToT score below 0.6
+[2026-05-24 01:08:14] [SERVER] [INFO] Tavily fallback complete — web context appended
+[2026-05-24 01:08:14] [SERVER] [INFO] CRAG resource complete | fallback_used=True
+[2026-05-24 01:08:14] [CLIENT] [INFO] CRAGResponse validated | fallback_used=True | avg_tot=0.167 | queries=4
+[2026-05-24 01:08:32] [CLIENT] [INFO] remote_reflection_tool invoked by agent
+[2026-05-24 01:08:32] [CLIENT] [DEBUG] ReflectionRequest validated | query='What is the Model Context Protocol (MCP) and how does it dif'
+[2026-05-24 01:08:32] [CLIENT] [INFO] Calling server tool 'reflection_tool'
+[2026-05-24 01:08:34] [SERVER] [INFO] [2026-05-24 01:08:34] reflection_tool invoked — starting 2-stage critique loop
+[2026-05-24 01:08:34] [SERVER] [DEBUG] Stage 1 — dispatching Critique sampling request to client LLM
+[2026-05-24 01:08:34] [CLIENT] [INFO] Sampling request received from server | request_id=0
+[2026-05-24 01:08:35] [CLIENT] [INFO] Sampling response generated | tokens≈97
+[2026-05-24 01:08:35] [SERVER] [INFO] Stage 1 complete | is_sufficient=False
+[2026-05-24 01:08:35] [SERVER] [DEBUG] Stage 2 — dispatching Correction sampling request to client LLM
+[2026-05-24 01:08:35] [CLIENT] [INFO] Sampling request received from server | request_id=1
+[2026-05-24 01:08:36] [CLIENT] [INFO] Sampling response generated | tokens≈265
+[2026-05-24 01:08:37] [SERVER] [INFO] Stage 2 correction complete — refined answer assembled
+[2026-05-24 01:08:37] [CLIENT] [INFO] ReflectionResponse received | is_sufficient=False
+[2026-05-24 01:09:26] [CLIENT] [INFO] Agent completed execution
+[2026-05-24 01:09:26] [CLIENT] [INFO] Final Answer: The Model Context Protocol (MCP) is a standardized protocol that enables applications to provide tools to Large Language Models (LLMs), allowing LangChain agents to dynamically discover and utilize tools from MCP servers. This is achieved through a formalized interface, typically using JSON-RPC with accompanying metadata, which facilitates seamless integration into diverse environments. In contrast to standard LangChain tool use, where tools are often hardcoded into the agent's codebase, MCP introduces a model-facing standardization. This approach enables an agent to discover and leverage any tool provided by an MCP server, even if the agent's code did not explicitly include that tool beforehand. For instance, in an enterprise setting, an MCP server could provide tools for data encryption, access control, or auditing, which an agent could then dynamically incorporate into its workflow. MCP achieves modularity by decoupling the agent's code from the tools it utilizes, allowing for the addition or removal of tools without modifying the agent's core logic. Observability is enhanced through the protocol's ability to provide metadata about the tools and their usage, enabling better monitoring and logging of agent activities. While MCP offers significant benefits for enterprise-grade agentic systems, its adoption may require additional infrastructure and maintenance efforts. Furthermore, the use of MCP might introduce potential security risks if not properly implemented, such as ensuring the authenticity and integrity of tools provided by MCP servers. Overall, MCP is better suited for enterprise-grade agentic systems requiring modularity and observability due to its ability to standardize tool provision and utilization, but its implementation should be carefully considered and planned to mitigate potential trade-offs and limitations.
+[2026-05-24 01:09:26] [CLIENT] [INFO] Total intermediate steps: 3
+[2026-05-24 01:09:26] [CLIENT] [DEBUG] Step 1 | tool=tavily_search | input=Model Context Protocol (MCP) and LangChain tool use | obs={'query': 'Model Context Protocol (MCP) and LangChain tool use', 'follow_up_questions': None, 'answer': 'Model Context Protocol (MCP) standardizes how applications provide tools to LLMs, allowing Lang
+[2026-05-24 01:09:26] [CLIENT] [DEBUG] Step 2 | tool=remote_crag_tool | input=MCP advantages for enterprise-grade agentic systems | obs=[AGENTIC_AI — L2-frameworks]
+Production agent framework comparison (2025):
+• LangChain / LangGraph  — best for single + multi-agent with state graphs, human-in-the-loop, and streaming. Mature ecosyste
+[2026-05-24 01:09:26] [CLIENT] [DEBUG] Step 3 | tool=remote_reflection_tool | input={"draft_answer": "MCP standardizes how applications provide tools to LLMs, allowing LangChain agents to dynamically disc | obs=CallToolResult(content=[TextContent(type='text', text='{\n  "critique": "The draft answer provides a clear and concise overview of the Model Context Protocol (MCP) and its benefits, particularly in th
+[2026-05-24 01:09:26] [CLIENT] [INFO] Agent session complete — logs written to agent_system.log
+[2026-05-24 02:02:11] [CLIENT] [INFO] Stage 2 Thinking Agent starting up
+[2026-05-24 02:02:11] [CLIENT] [INFO] MCP Server URL: http://localhost:8000/mcp
+[2026-05-24 02:02:15] [CLIENT] [INFO] Query submitted to agent: 'What is the Model Context Protocol (MCP) and how does it differ from standard LangChain tool use? Which approach is better suited for enterprise-grade agentic systems requiring modularity and observability?'
+[2026-05-24 02:02:22] [CLIENT] [INFO] remote_crag_tool invoked | query='Model Context Protocol (MCP) and its differences from standard LangChain tool use, and which approach is better suited for enterprise-grade agentic systems requiring modularity and observability'
+[2026-05-24 02:02:22] [CLIENT] [INFO] Reading server resource 'knowledge://domain/Model%20Context%20Protocol%20%28MCP%29%20and%20its%20differences%20from%20standard%20LangChain%20tool%20use%2C%20and%20which%20approach%20is%20better%20suited%20for%20enterprise-grade%20agentic%20systems%20requiring%20modularity%20and%20observability'
+[2026-05-24 02:02:22] [CLIENT] [INFO] Initialising FastMCP Client → http://localhost:8000/mcp
+[2026-05-24 02:02:24] [SERVER] [INFO] [2026-05-24 02:02:24] CRAG resource invoked | query='Model Context Protocol (MCP) and its differences from standard LangChain tool use, and which approach is better suited for enterprise-grade agentic systems requiring modularity and observability'
+[2026-05-24 02:02:24] [SERVER] [DEBUG] CRAG Step 1 — dispatching Multi-Query Expansion to client LLM
+[2026-05-24 02:02:24] [CLIENT] [INFO] Sampling request received from server | request_id=0
+[2026-05-24 02:02:26] [CLIENT] [INFO] Sampling LLM initialised: llama-3.3-70b-versatile
+[2026-05-24 02:02:27] [CLIENT] [INFO] Sampling response generated | tokens≈36
+[2026-05-24 02:02:27] [SERVER] [INFO] Multi-query expansion: 4 queries ready
+[2026-05-24 02:02:27] [SERVER] [DEBUG] CRAG Step 2 — Hierarchical Indexing retrieval started
+[2026-05-24 02:02:27] [SERVER] [INFO] Hierarchical retrieval: 4 unique chunks found
+[2026-05-24 02:02:27] [SERVER] [DEBUG] CRAG Step 3 — Initiating ToT Evaluation on retrieved chunks
+[2026-05-24 02:02:31] [SERVER] [INFO] ToT scores — Specificity:0.18 Completeness:0.44 Novelty:0.19 | avg=0.27
+[2026-05-24 02:02:31] [SERVER] [INFO] Tavily fallback triggered — avg ToT score below 0.6
+[2026-05-24 02:02:31] [SERVER] [INFO] Tavily fallback complete — web context appended
+[2026-05-24 02:02:31] [SERVER] [INFO] CRAG resource complete | fallback_used=True
+[2026-05-24 02:02:31] [CLIENT] [INFO] CRAGResponse validated | fallback_used=True | avg_tot=0.268 | queries=4
+[2026-05-24 02:02:54] [CLIENT] [INFO] remote_reflection_tool invoked by agent
+[2026-05-24 02:02:54] [CLIENT] [DEBUG] ReflectionRequest validated | query='What is the Model Context Protocol (MCP) and how does it dif'
+[2026-05-24 02:02:54] [CLIENT] [INFO] Calling server tool 'reflection_tool'
+[2026-05-24 02:02:55] [SERVER] [INFO] [2026-05-24 02:02:55] reflection_tool invoked — starting 2-stage critique loop
+[2026-05-24 02:02:55] [SERVER] [DEBUG] Stage 1 — dispatching Critique sampling request to client LLM
+[2026-05-24 02:02:55] [CLIENT] [INFO] Sampling request received from server | request_id=0
+[2026-05-24 02:02:56] [CLIENT] [INFO] Sampling response generated | tokens≈84
+[2026-05-24 02:02:57] [SERVER] [INFO] Stage 1 complete | is_sufficient=False
+[2026-05-24 02:02:57] [SERVER] [DEBUG] Stage 2 — dispatching Correction sampling request to client LLM
+[2026-05-24 02:02:57] [CLIENT] [INFO] Sampling request received from server | request_id=1
+[2026-05-24 02:02:57] [CLIENT] [INFO] Sampling response generated | tokens≈214
+[2026-05-24 02:02:58] [SERVER] [INFO] Stage 2 correction complete — refined answer assembled
+[2026-05-24 02:02:58] [CLIENT] [INFO] ReflectionResponse received | is_sufficient=False
+[2026-05-24 02:03:43] [CLIENT] [INFO] Agent completed execution
+[2026-05-24 02:03:43] [CLIENT] [INFO] Final Answer: The Model Context Protocol (MCP) is a framework for tool management in LangChain that enables secure and context-aware tool calls, differing from standard LangChain tool use by providing a standardized, modular interface for managing agent inputs and outputs. MCP uses interceptors for authentication and rate limiting, and supports custom server implementations for various tools. The protocol defines five primitives: tools, resources, prompts, sampling, and elicitation, with sampling being a key inversion where the server has no large language model (LLM) and the client's model handles all completions routed through ctx.session.create_message(). This approach allows for greater modularity and observability, making it better suited for enterprise-grade agentic systems. For instance, MCP enables the integration of multiple tools and systems, such as natural language processing (NLP) and computer vision, into a single workflow, while also providing a standardized interface for monitoring and logging tool interactions. In contrast, standard LangChain tool use may result in a more monolithic architecture, making it harder to manage complex workflows and integrate with various tools and systems. However, MCP may introduce additional complexity and overhead due to the need to implement and manage interceptors and custom server implementations. Overall, MCP offers a more scalable and maintainable approach for enterprise-grade agentic systems, but requires careful consideration of the trade-offs and potential limitations.
+[2026-05-24 02:03:43] [CLIENT] [INFO] Total intermediate steps: 3
+[2026-05-24 02:03:43] [CLIENT] [DEBUG] Step 1 | tool=tavily_search | input=Model Context Protocol (MCP) and LangChain tool use | obs={'query': 'Model Context Protocol (MCP) and LangChain tool use', 'follow_up_questions': None, 'answer': 'Model Context Protocol (MCP) is a framework for tool management in LangChain, enabling secure a
+[2026-05-24 02:03:43] [CLIENT] [DEBUG] Step 2 | tool=remote_crag_tool | input=Model Context Protocol (MCP) and its differences from standard LangChain tool use, and which approach is better suited f | obs=[FASTMCP_SERVER — L2-server-setup]
+FastMCP server skeleton:
+```python
+from fastmcp import FastMCP, Context
+from mcp.types import SamplingMessage, TextContent
+
+mcp = FastMCP('MyServer')
+
+@mcp.tool()
+as
+[2026-05-24 02:03:43] [CLIENT] [DEBUG] Step 3 | tool=remote_reflection_tool | input={"draft_answer": "The Model Context Protocol (MCP) is a framework for tool management in LangChain, enabling secure and  | obs=CallToolResult(content=[TextContent(type='text', text='{\n  "critique": "The draft answer provides a basic overview of the Model Context Protocol (MCP) and its components, but lacks a clear comparison
+[2026-05-24 02:03:43] [CLIENT] [INFO] Agent session complete — logs written to agent_system.log

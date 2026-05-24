@@ -1,0 +1,16 @@
+# uv / Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+dist/
+build/
+*.egg-info/
+.uv/
+
+# Environment
+.env
+.env.local
+
+# Logs (keep sample; ignore runtime-generated copies)
+!agent_system.log

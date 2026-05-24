@@ -1,0 +1,22 @@
+[build-system]
+requires      = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name            = "mcp-server"
+version         = "0.1.0"
+description     = "Stage 2 FastMCP server — Reflection Tool + Hierarchical CRAG Resource"
+requires-python = ">=3.11"
+dependencies    = [
+    "fastmcp>=2.3.4",
+    "tavily-python>=0.3.9",
+    "pydantic>=2.8.0",
+    "uvicorn[standard]>=0.30.0",
+]
+
+[project.scripts]
+# uv run --package mcp-server mcp-server
+mcp-server = "mcp_server.server:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mcp_server"]

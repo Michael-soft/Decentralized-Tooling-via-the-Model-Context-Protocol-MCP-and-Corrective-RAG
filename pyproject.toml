@@ -1,0 +1,8 @@
+# ── Root uv Workspace ─────────────────────────────────────────────────────────
+# Declares the two sub-packages managed as a single monorepo.
+# Run either package with:
+#   uv run --package mcp-server   mcp-server
+#   uv run --package agent-client agent-client
+
+[tool.uv]
+workspace = { members = ["mcp_server", "agent_client"] }
