@@ -167,3 +167,72 @@ mcp = FastMCP('MyServer')
 as
 [2026-05-24 02:03:43] [CLIENT] [DEBUG] Step 3 | tool=remote_reflection_tool | input={"draft_answer": "The Model Context Protocol (MCP) is a framework for tool management in LangChain, enabling secure and  | obs=CallToolResult(content=[TextContent(type='text', text='{\n  "critique": "The draft answer provides a basic overview of the Model Context Protocol (MCP) and its components, but lacks a clear comparison
 [2026-05-24 02:03:43] [CLIENT] [INFO] Agent session complete — logs written to agent_system.log
+[2026-05-25 22:04:48] [CLIENT] [INFO] Stage 2 Thinking Agent starting up
+[2026-05-25 22:04:48] [CLIENT] [INFO] MCP Server URL: http://localhost:8000/mcp
+[2026-05-25 22:12:31] [CLIENT] [INFO] Stage 2 Thinking Agent starting up
+[2026-05-25 22:12:31] [CLIENT] [INFO] MCP Server URL: http://localhost:8000/mcp
+[2026-05-25 22:12:34] [CLIENT] [INFO] Query submitted to agent: 'What is the Model Context Protocol (MCP) and how does it differ from standard LangChain tool use? Which approach is better suited for enterprise-grade agentic systems requiring modularity and observability?'
+[2026-05-25 22:12:43] [CLIENT] [INFO] remote_crag_tool invoked | query='Model Context Protocol (MCP) benefits and differences from LangChain tool use'
+[2026-05-25 22:12:43] [CLIENT] [INFO] Reading server resource 'knowledge://domain/Model%20Context%20Protocol%20%28MCP%29%20benefits%20and%20differences%20from%20LangChain%20tool%20use'
+[2026-05-25 22:12:43] [CLIENT] [INFO] Initialising FastMCP Client → http://localhost:8000/mcp
+[2026-05-25 22:18:49] [CLIENT] [INFO] Stage 2 Thinking Agent starting up
+[2026-05-25 22:18:49] [CLIENT] [INFO] MCP Server URL: http://localhost:8000/mcp
+[2026-05-25 22:18:51] [CLIENT] [INFO] Query submitted to agent: 'What is the Model Context Protocol (MCP) and how does it differ from standard LangChain tool use? Which approach is better suited for enterprise-grade agentic systems requiring modularity and observability?'
+[2026-05-25 22:18:55] [CLIENT] [INFO] remote_crag_tool invoked | query='Model Context Protocol (MCP) benefits and differences from LangChain tool use'
+[2026-05-25 22:18:55] [CLIENT] [INFO] Reading server resource 'knowledge://domain/Model%20Context%20Protocol%20%28MCP%29%20benefits%20and%20differences%20from%20LangChain%20tool%20use'
+[2026-05-25 22:18:55] [CLIENT] [INFO] Initialising FastMCP Client → http://localhost:8000/mcp
+[2026-05-25 22:28:51] [CLIENT] [INFO] Stage 2 Thinking Agent starting up
+[2026-05-25 22:28:51] [CLIENT] [INFO] MCP Server URL: http://localhost:8000/mcp
+[2026-05-25 22:28:54] [CLIENT] [INFO] Query submitted to agent: 'What is the Model Context Protocol (MCP) and how does it differ from standard LangChain tool use? Which approach is better suited for enterprise-grade agentic systems requiring modularity and observability?'
+[2026-05-25 22:28:58] [CLIENT] [INFO] remote_crag_tool invoked | query='Model Context Protocol (MCP) benefits and differences from LangChain tool use'
+[2026-05-25 22:28:58] [CLIENT] [INFO] Reading server resource 'knowledge://domain/Model%20Context%20Protocol%20%28MCP%29%20benefits%20and%20differences%20from%20LangChain%20tool%20use'
+[2026-05-25 22:28:58] [CLIENT] [INFO] Initialising FastMCP Client → http://localhost:8000/mcp
+[2026-05-25 22:30:00] [CLIENT] [INFO] Stage 2 Thinking Agent starting up
+[2026-05-25 22:30:00] [CLIENT] [INFO] MCP Server URL: http://localhost:8000/mcp
+[2026-05-25 22:30:04] [CLIENT] [INFO] Query submitted to agent: 'What is the Model Context Protocol (MCP) and how does it differ from standard LangChain tool use? Which approach is better suited for enterprise-grade agentic systems requiring modularity and observability?'
+[2026-05-25 22:30:08] [CLIENT] [INFO] remote_crag_tool invoked | query='Model Context Protocol (MCP) benefits and differences from LangChain tool use'
+[2026-05-25 22:30:08] [CLIENT] [INFO] Reading server resource 'knowledge://domain/Model%20Context%20Protocol%20%28MCP%29%20benefits%20and%20differences%20from%20LangChain%20tool%20use'
+[2026-05-25 22:30:08] [CLIENT] [INFO] Initialising FastMCP Client → http://localhost:8000/mcp
+[2026-05-25 22:30:10] [SERVER] [INFO] [2026-05-25 22:30:10] CRAG resource invoked | query='Model Context Protocol (MCP) benefits and differences from LangChain tool use'
+[2026-05-25 22:30:10] [SERVER] [DEBUG] CRAG Step 1 — dispatching Multi-Query Expansion to client LLM
+[2026-05-25 22:30:10] [CLIENT] [INFO] Sampling request received from server | request_id=0
+[2026-05-25 22:30:12] [CLIENT] [INFO] Sampling LLM initialised: llama-3.3-70b-versatile
+[2026-05-25 22:30:13] [CLIENT] [INFO] Sampling response generated | tokens≈29
+[2026-05-25 22:30:13] [SERVER] [INFO] Multi-query expansion: 4 queries ready
+[2026-05-25 22:30:13] [SERVER] [DEBUG] CRAG Step 2 — Hierarchical Indexing retrieval started
+[2026-05-25 22:30:13] [SERVER] [INFO] Hierarchical retrieval: 5 unique chunks found
+[2026-05-25 22:30:13] [SERVER] [DEBUG] CRAG Step 3 — Initiating ToT Evaluation on retrieved chunks
+[2026-05-25 22:30:17] [SERVER] [INFO] ToT scores — Specificity:0.34 Completeness:0.36 Novelty:0.17 | avg=0.29
+[2026-05-25 22:30:17] [SERVER] [INFO] Tavily fallback triggered — avg ToT score below 0.6
+[2026-05-25 22:30:17] [SERVER] [INFO] Tavily fallback complete — web context appended
+[2026-05-25 22:30:17] [SERVER] [INFO] CRAG resource complete | fallback_used=True
+[2026-05-25 22:30:17] [CLIENT] [INFO] CRAGResponse validated | fallback_used=True | avg_tot=0.293 | queries=4
+[2026-05-25 22:30:21] [CLIENT] [INFO] remote_reflection_tool invoked by agent
+[2026-05-25 22:30:21] [CLIENT] [DEBUG] ReflectionRequest validated | query='What is the Model Context Protocol (MCP) and how does it dif'
+[2026-05-25 22:30:21] [CLIENT] [INFO] Calling server tool 'reflection_tool'
+[2026-05-25 22:30:22] [SERVER] [INFO] [2026-05-25 22:30:22] reflection_tool invoked — starting 2-stage critique loop
+[2026-05-25 22:30:22] [SERVER] [DEBUG] Stage 1 — dispatching Critique sampling request to client LLM
+[2026-05-25 22:30:22] [CLIENT] [INFO] Sampling request received from server | request_id=0
+[2026-05-25 22:30:24] [CLIENT] [INFO] Sampling response generated | tokens≈66
+[2026-05-25 22:30:24] [SERVER] [INFO] Stage 1 complete | is_sufficient=False
+[2026-05-25 22:30:24] [SERVER] [DEBUG] Stage 2 — dispatching Correction sampling request to client LLM
+[2026-05-25 22:30:24] [CLIENT] [INFO] Sampling request received from server | request_id=1
+[2026-05-25 22:30:25] [CLIENT] [INFO] Sampling response generated | tokens≈155
+[2026-05-25 22:30:25] [SERVER] [INFO] Stage 2 correction complete — refined answer assembled
+[2026-05-25 22:30:26] [CLIENT] [INFO] ReflectionResponse received | is_sufficient=False
+[2026-05-25 22:31:09] [CLIENT] [INFO] Agent completed execution
+[2026-05-25 22:31:09] [CLIENT] [INFO] Final Answer: The Model Context Protocol (MCP) is a standardized protocol that separates agent reasoning from tool implementation, allowing for modularity, security, and scalability. Unlike standard LangChain tool use, where tools are often tightly integrated with specific agent architectures, MCP enables a modular and flexible approach to tooling. This modularity allows developers to easily swap out tools or add new ones without modifying the underlying agent code, thereby enhancing security by reducing the attack surface and improving scalability by enabling more efficient use of resources. For instance, in a standard LangChain setup, a language model might be directly integrated with a database tool, whereas with MCP, the language model can interact with the database through a standardized interface, making it easier to replace the database tool with a different one if needed. This separation of concerns enables more efficient development, deployment, and maintenance of LangChain applications, and facilitates the creation of more complex and dynamic toolchains.
+[2026-05-25 22:31:09] [CLIENT] [INFO] Total intermediate steps: 3
+[2026-05-25 22:31:09] [CLIENT] [DEBUG] Step 1 | tool=tavily_search | input=Model Context Protocol (MCP) and LangChain tool use | obs={'query': 'Model Context Protocol (MCP) and LangChain tool use', 'follow_up_questions': None, 'answer': 'Model Context Protocol (MCP) standardizes tool usage for LLMs, and LangChain uses @langchain/mc
+[2026-05-25 22:31:09] [CLIENT] [DEBUG] Step 2 | tool=remote_crag_tool | input=Model Context Protocol (MCP) benefits and differences from LangChain tool use | obs=[FASTMCP_SERVER — L2-server-setup]
+FastMCP server skeleton:
+```python
+from fastmcp import FastMCP, Context
+from mcp.types import SamplingMessage, TextContent
+
+mcp = FastMCP('MyServer')
+
+@mcp.tool()
+as
+[2026-05-25 22:31:09] [CLIENT] [DEBUG] Step 3 | tool=remote_reflection_tool | input={"draft_answer": "The Model Context Protocol (MCP) is a standardized protocol that separates agent reasoning from tool i | obs=CallToolResult(content=[TextContent(type='text', text='{\n  "critique": "The draft answer provides a brief definition of the Model Context Protocol (MCP) but lacks specific details on how it differs f
+[2026-05-25 22:31:09] [CLIENT] [INFO] Agent session complete — logs written to agent_system.log

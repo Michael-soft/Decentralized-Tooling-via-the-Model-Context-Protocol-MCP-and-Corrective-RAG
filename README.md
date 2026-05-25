@@ -1,4 +1,4 @@
-# Stage 2 — Decentralised Thinking Agent (FastMCP + LangChain)
+# Stage 2 task — Decentralised Thinking Agent (FastMCP + LangChain)
 
 Production-grade MCP monorepo: a FastMCP server exposing a **Reflection Tool** (MCP Sampling) and a **Hierarchical CRAG Resource** (ToT + Tavily fallback), consumed by a LangChain ReAct agent over `streamable-http`.
 
