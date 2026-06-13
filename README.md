@@ -1,4 +1,4 @@
-#"Hierarchical Log Persistence and Graph Knowledge Mapping." 
+#Hierarchical Log Persistence and Graph Knowledge Mapping. 
 
 A production-grade **uv monorepo** spanning three decoupled processes:
 
