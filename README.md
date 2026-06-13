@@ -1,4 +1,4 @@
-# Decentralised Thinking Agent — MCP + Corrective RAG + Observability Control Plane
+#"Hierarchical Log Persistence and Graph Knowledge Mapping." 
 
 A production-grade **uv monorepo** spanning three decoupled processes:
 
