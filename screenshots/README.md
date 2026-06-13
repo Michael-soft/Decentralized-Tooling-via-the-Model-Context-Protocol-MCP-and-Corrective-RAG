@@ -12,7 +12,6 @@ Captured: **Sat 13 Jun 2026, 02:52–02:54**.
 | 2 | `02-mcp-server-protocol.png` | ✅ committed | **mcp_server** streamable-http protocol logs (02:53) — `POST /mcp 200 OK`, `ListToolsRequest`, the `reflection_tool` schema, MCP Sampling round-trips. |
 | 3 | `03-analysis-agent-neo4j-commit.png` | ✅ committed | **analysis-agent** terminal (02:54) — `Building Log Analysis Agent`, `analyze_*` tool calls, `Connecting to Neo4j Aura`, `Neo4j projection committed | nodes=85 edges=107`, `chart saved → charts/…`. |
 | 4 | `04-dashboard-latency-chart.png` | ✅ committed | **Streamlit dashboard** (02:33) — "Log store online", "Neo4j Aura configured", the rendered *Tool / Interaction Latency Trend* chart + the agent's diagnosis text. |
-| 5 | `05-neo4j-aura-graph.png` | ⬜ to add | **Neo4j Aura console** — the projected property graph: `(:Session)`, `(:AgentAction)`, `(:MCPServerCall)` bound by `[:TRIGGERED]`, `[:ROUTED_TO]`, `[:DEPENDS_ON]` (85 nodes / 107 relationships). |
+| 5 | `05-neo4j-aura-graph.png` | ✅ committed | **Neo4j Aura console** — the projected property graph: `(:Session)`, `(:AgentAction)`, `(:MCPServerCall)` bound by `[:TRIGGERED]`, `[:ROUTED_TO]`, `[:DEPENDS_ON]` (85 nodes / 107 relationships). |
 
-> Files 1–4 are committed. To add #5, save your Neo4j Aura graph capture as
-> `screenshots/05-neo4j-aura-graph.png`, then `git add` + commit.
+> All five captures are committed under `screenshots/`.
