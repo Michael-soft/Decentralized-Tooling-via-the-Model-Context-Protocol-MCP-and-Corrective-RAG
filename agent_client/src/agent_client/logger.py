@@ -20,10 +20,11 @@ Log format
 from __future__ import annotations
 
 import logging
+import os
 import sys
 from pathlib import Path
 
-LOG_FILE = Path("agent_system.log")
+LOG_FILE = Path(os.environ.get("MCP_FLAT_LOG", "mcp_agent_system.log"))
 _FMT     = "[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s"
 _DATE    = "%Y-%m-%d %H:%M:%S"
 

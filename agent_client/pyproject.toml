@@ -18,6 +18,9 @@ dependencies    = [
     "langsmith>=0.2",
     "tavily-python>=0.3.9",
     "pydantic>=2.8.0",
+    "langgraph-checkpoint-sqlite>=3.1.0",
+    "fastembed>=0.8.0",
+    "python-dotenv>=1.2.2",
 ]
 
 [project.scripts]

@@ -1,0 +1,165 @@
+[2026-06-13 01:11:26] [CLIENT] [INFO] ======================================================================
+[2026-06-13 01:11:26] [CLIENT] [INFO] Stage 3 Thinking Agent starting up (vector-logged)
+[2026-06-13 01:11:26] [CLIENT] [INFO] Session ID  : 1838a1aa-ffb0-489b-8004-c8f5e4673661
+[2026-06-13 01:11:26] [CLIENT] [INFO] MCP Server URL: http://localhost:8000/mcp
+[2026-06-13 01:11:26] [CLIENT] [INFO] Log DB        : mcp_agent_log.db
+[2026-06-13 01:11:26] [CLIENT] [INFO] ======================================================================
+[2026-06-13 01:11:27] [CLIENT] [INFO] Hierarchical vector log store ready → mcp_agent_log.db (dims=384)
+[2026-06-13 01:11:28] [CLIENT] [INFO] ──────────────────────────────────────────────────────────────────────
+[2026-06-13 01:11:28] [CLIENT] [INFO] TURN 1/3 | session=1838a1aa-ffb0-489b-8004-c8f5e4673661
+[2026-06-13 01:11:28] [CLIENT] [INFO] Query submitted to agent: 'What is the Model Context Protocol (MCP) and how does it differ from standard LangChain tool use? Which approach is better suited for enterprise-grade agentic systems requiring modularity and observability?'
+[2026-06-13 01:11:28] [CLIENT] [DEBUG] Log persisted | ns=logs.agent.session | key=1781309488581-9c42e59f | type=tool_invocation | status=success
+[2026-06-13 01:11:35] [CLIENT] [INFO] remote_crag_tool invoked | query='Model Context Protocol (MCP) vs LangChain tool use'
+[2026-06-13 01:11:35] [CLIENT] [INFO] Reading server resource 'knowledge://domain/Model%20Context%20Protocol%20%28MCP%29%20vs%20LangChain%20tool%20use'
+[2026-06-13 01:11:35] [CLIENT] [INFO] Initialising FastMCP Client → http://localhost:8000/mcp
+[2026-06-13 01:11:35] [SERVER] [INFO] [2026-06-13 01:11:35] CRAG resource invoked | query='Model Context Protocol (MCP) vs LangChain tool use'
+[2026-06-13 01:11:35] [SERVER] [DEBUG] CRAG Step 1 — dispatching Multi-Query Expansion to client LLM
+[2026-06-13 01:11:35] [CLIENT] [INFO] Sampling request received from server | request_id=0
+[2026-06-13 01:11:35] [CLIENT] [INFO] Sampling LLM initialised: llama-3.3-70b-versatile
+[2026-06-13 01:11:36] [CLIENT] [INFO] Sampling response generated | tokens≈31
+[2026-06-13 01:11:36] [CLIENT] [DEBUG] Log persisted | ns=logs.mcp.client.sampling | key=1781309496484-4191ca36 | type=sampling_request | status=success
+[2026-06-13 01:11:36] [SERVER] [INFO] Multi-query expansion: 4 queries ready
+[2026-06-13 01:11:36] [SERVER] [DEBUG] CRAG Step 2 — Hierarchical Indexing retrieval started
+[2026-06-13 01:11:36] [SERVER] [INFO] Hierarchical retrieval: 4 unique chunks found
+[2026-06-13 01:11:36] [SERVER] [DEBUG] CRAG Step 3 — Initiating ToT Evaluation on retrieved chunks
+[2026-06-13 01:11:39] [SERVER] [INFO] ToT scores — Specificity:0.31 Completeness:0.24 Novelty:0.19 | avg=0.25
+[2026-06-13 01:11:39] [SERVER] [INFO] Tavily fallback triggered — avg ToT score below 0.6
+[2026-06-13 01:11:39] [SERVER] [INFO] Tavily fallback complete — web context appended
+[2026-06-13 01:11:39] [SERVER] [INFO] CRAG resource complete | fallback_used=True
+[2026-06-13 01:11:39] [CLIENT] [DEBUG] Log persisted | ns=logs.mcp.server.resources.crag | key=1781309499142-4ec1c64e | type=resource_read | status=success
+[2026-06-13 01:11:39] [CLIENT] [INFO] CRAGResponse validated | fallback_used=True | avg_tot=0.249 | queries=4
+[2026-06-13 01:12:10] [CLIENT] [INFO] remote_reflection_tool invoked by agent
+[2026-06-13 01:12:10] [CLIENT] [DEBUG] ReflectionRequest validated | query='What is the Model Context Protocol (MCP) and how does it dif'
+[2026-06-13 01:12:10] [CLIENT] [INFO] Calling server tool 'reflection_tool'
+[2026-06-13 01:12:10] [SERVER] [INFO] [2026-06-13 01:12:10] reflection_tool invoked — starting 2-stage critique loop
+[2026-06-13 01:12:10] [SERVER] [DEBUG] Stage 1 — dispatching Critique sampling request to client LLM
+[2026-06-13 01:12:10] [CLIENT] [INFO] Sampling request received from server | request_id=0
+[2026-06-13 01:12:12] [CLIENT] [INFO] Sampling response generated | tokens≈86
+[2026-06-13 01:12:12] [CLIENT] [DEBUG] Log persisted | ns=logs.mcp.client.sampling | key=1781309532102-1457a2b4 | type=sampling_request | status=success
+[2026-06-13 01:12:12] [SERVER] [INFO] Stage 1 complete | is_sufficient=False
+[2026-06-13 01:12:12] [SERVER] [DEBUG] Stage 2 — dispatching Correction sampling request to client LLM
+[2026-06-13 01:12:12] [CLIENT] [INFO] Sampling request received from server | request_id=1
+[2026-06-13 01:12:13] [CLIENT] [INFO] Sampling response generated | tokens≈269
+[2026-06-13 01:12:13] [CLIENT] [DEBUG] Log persisted | ns=logs.mcp.client.sampling | key=1781309533539-03c1c461 | type=sampling_request | status=success
+[2026-06-13 01:12:13] [SERVER] [INFO] Stage 2 correction complete — refined answer assembled
+[2026-06-13 01:12:13] [CLIENT] [DEBUG] Log persisted | ns=logs.mcp.server.tools.reflection_tool | key=1781309533672-08dec278 | type=tool_invocation | status=success
+[2026-06-13 01:12:13] [CLIENT] [INFO] ReflectionResponse received | is_sufficient=False
+[2026-06-13 01:13:04] [CLIENT] [INFO] Agent completed execution
+[2026-06-13 01:13:04] [CLIENT] [INFO] Final Answer: The Model Context Protocol (MCP) is a standardized framework that enables the provision of tools and context to Large Language Models (LLMs) in a unified and structured manner. It differs from standard LangChain tool use in that LangChain is primarily a workflow engine designed to orchestrate the interactions between various AI tools, whereas MCP serves as a communication bus that facilitates the exchange of information and context between different components within an AI ecosystem. MCP standardizes tool and context provision by defining a common interface and set of protocols that allow LLMs to access and utilize a wide range of tools and data sources in a consistent and efficient way. This enables developers to build more complex and integrated AI applications, and facilitates the creation of modular and reusable AI components. In contrast, LangChain is focused on managing the workflow and data flow between different AI tools, and provides a set of APIs and interfaces that allow developers to integrate these tools into their applications. To illustrate the difference, consider a scenario where an LLM is being used to generate text based on a set of input parameters. In this case, MCP would provide the standardized interface for the LLM to access the input parameters and any additional context or tools required to generate the text, whereas LangChain would manage the workflow of generating the text, including tasks such as data preprocessing, model selection, and post-processing. By providing a standardized framework for tool and context provision, MCP enables developers to build more robust and scalable AI applications, and facilitates the creation of more sophisticated AI workflows using LangChain.
+[2026-06-13 01:13:04] [CLIENT] [INFO] Total intermediate steps: 3
+[2026-06-13 01:13:04] [CLIENT] [DEBUG] Step 1 | tool=tavily_search | input=Model Context Protocol (MCP) and LangChain tool use | obs={'query': 'Model Context Protocol (MCP) and LangChain tool use', 'follow_up_questions': None, 'answer': 'Model Context Protocol (MCP) standardizes tool and context provision for LLMs. LangChain agents
+[2026-06-13 01:13:05] [CLIENT] [DEBUG] Log persisted | ns=logs.agent.planning.tavily_search | key=1781309584956-1-06edea | type=tool_invocation | status=success
+[2026-06-13 01:13:05] [CLIENT] [DEBUG] Step 2 | tool=remote_crag_tool | input=Model Context Protocol (MCP) vs LangChain tool use | obs=[FASTMCP_SERVER — L2-server-setup]
+FastMCP server skeleton:
+```python
+from fastmcp import FastMCP, Context
+from mcp.types import SamplingMessage, TextContent
+
+mcp = FastMCP('MyServer')
+
+@mcp.tool()
+as
+[2026-06-13 01:13:05] [CLIENT] [DEBUG] Log persisted | ns=logs.agent.planning.remote_crag_tool | key=1781309585090-2-012740 | type=tool_invocation | status=success
+[2026-06-13 01:13:05] [CLIENT] [DEBUG] Step 3 | tool=remote_reflection_tool | input={"draft_answer": "MCP standardizes tool and context provision for LLMs, while LangChain helps orchestrate AI tools. MCP  | obs=CallToolResult(content=[TextContent(type='text', text='{\n  "critique": "The draft answer provides a brief overview of the Model Context Protocol (MCP) and its difference from LangChain, but lacks det
+[2026-06-13 01:13:05] [CLIENT] [DEBUG] Log persisted | ns=logs.agent.planning.remote_reflection_tool | key=1781309585188-3-18ec2e | type=tool_invocation | status=success
+[2026-06-13 01:13:05] [CLIENT] [INFO] ──────────────────────────────────────────────────────────────────────
+[2026-06-13 01:13:05] [CLIENT] [INFO] TURN 2/3 | session=1838a1aa-ffb0-489b-8004-c8f5e4673661
+[2026-06-13 01:13:05] [CLIENT] [INFO] Query submitted to agent: 'Explain Corrective RAG (CRAG) and Tree-of-Thought grading. How does hierarchical retrieval improve answer quality over naive RAG?'
+[2026-06-13 01:13:05] [CLIENT] [DEBUG] Log persisted | ns=logs.agent.session | key=1781309585284-858a81d3 | type=tool_invocation | status=success
+[2026-06-13 01:13:32] [CLIENT] [INFO] remote_crag_tool invoked | query='Corrective RAG (CRAG) and Tree-of-Thought grading'
+[2026-06-13 01:13:32] [CLIENT] [INFO] Reading server resource 'knowledge://domain/Corrective%20RAG%20%28CRAG%29%20and%20Tree-of-Thought%20grading'
+[2026-06-13 01:13:32] [SERVER] [INFO] [2026-06-13 01:13:32] CRAG resource invoked | query='Corrective RAG (CRAG) and Tree-of-Thought grading'
+[2026-06-13 01:13:32] [SERVER] [DEBUG] CRAG Step 1 — dispatching Multi-Query Expansion to client LLM
+[2026-06-13 01:13:32] [CLIENT] [INFO] Sampling request received from server | request_id=0
+[2026-06-13 01:13:33] [CLIENT] [INFO] Sampling response generated | tokens≈12
+[2026-06-13 01:13:34] [CLIENT] [DEBUG] Log persisted | ns=logs.mcp.client.sampling | key=1781309613919-f231c679 | type=sampling_request | status=success
+[2026-06-13 01:13:34] [SERVER] [INFO] Multi-query expansion: 4 queries ready
+[2026-06-13 01:13:34] [SERVER] [DEBUG] CRAG Step 2 — Hierarchical Indexing retrieval started
+[2026-06-13 01:13:34] [SERVER] [INFO] Hierarchical retrieval: 5 unique chunks found
+[2026-06-13 01:13:34] [SERVER] [DEBUG] CRAG Step 3 — Initiating ToT Evaluation on retrieved chunks
+[2026-06-13 01:13:36] [SERVER] [INFO] ToT scores — Specificity:0.30 Completeness:0.20 Novelty:0.26 | avg=0.25
+[2026-06-13 01:13:36] [SERVER] [INFO] Tavily fallback triggered — avg ToT score below 0.6
+[2026-06-13 01:13:36] [SERVER] [INFO] Tavily fallback complete — web context appended
+[2026-06-13 01:13:36] [SERVER] [INFO] CRAG resource complete | fallback_used=True
+[2026-06-13 01:13:36] [CLIENT] [DEBUG] Log persisted | ns=logs.mcp.server.resources.crag | key=1781309616306-a5b6c2b3 | type=resource_read | status=success
+[2026-06-13 01:13:36] [CLIENT] [INFO] CRAGResponse validated | fallback_used=True | avg_tot=0.254 | queries=4
+[2026-06-13 01:14:09] [CLIENT] [INFO] remote_reflection_tool invoked by agent
+[2026-06-13 01:14:09] [CLIENT] [DEBUG] ReflectionRequest validated | query='Explain Corrective RAG (CRAG) and Tree-of-Thought grading. H'
+[2026-06-13 01:14:09] [CLIENT] [INFO] Calling server tool 'reflection_tool'
+[2026-06-13 01:14:09] [SERVER] [INFO] [2026-06-13 01:14:09] reflection_tool invoked — starting 2-stage critique loop
+[2026-06-13 01:14:09] [SERVER] [DEBUG] Stage 1 — dispatching Critique sampling request to client LLM
+[2026-06-13 01:14:09] [CLIENT] [INFO] Sampling request received from server | request_id=0
+[2026-06-13 01:14:10] [CLIENT] [INFO] Sampling response generated | tokens≈88
+[2026-06-13 01:14:10] [CLIENT] [DEBUG] Log persisted | ns=logs.mcp.client.sampling | key=1781309650495-08164f34 | type=sampling_request | status=success
+[2026-06-13 01:14:10] [SERVER] [INFO] Stage 1 complete | is_sufficient=False
+[2026-06-13 01:14:10] [SERVER] [DEBUG] Stage 2 — dispatching Correction sampling request to client LLM
+[2026-06-13 01:14:10] [CLIENT] [INFO] Sampling request received from server | request_id=1
+[2026-06-13 01:14:12] [CLIENT] [INFO] Sampling response generated | tokens≈357
+[2026-06-13 01:14:12] [CLIENT] [DEBUG] Log persisted | ns=logs.mcp.client.sampling | key=1781309652443-0aaa3269 | type=sampling_request | status=success
+[2026-06-13 01:14:12] [SERVER] [INFO] Stage 2 correction complete — refined answer assembled
+[2026-06-13 01:14:12] [CLIENT] [DEBUG] Log persisted | ns=logs.mcp.server.tools.reflection_tool | key=1781309652573-31a54e22 | type=tool_invocation | status=success
+[2026-06-13 01:14:12] [CLIENT] [INFO] ReflectionResponse received | is_sufficient=False
+[2026-06-13 01:15:01] [CLIENT] [INFO] Agent completed execution
+[2026-06-13 01:15:01] [CLIENT] [INFO] Final Answer: Corrective RAG (CRAG) is an advancement over traditional RAG systems, focusing on evaluating and correcting the accuracy of retrieved documents before they influence the model's output. This process significantly reduces errors and enhances reliability, making it crucial for high-stakes applications where precise information is paramount. The CRAG pipeline involves four key steps: (1) Retrieve: Utilizing standard similarity search to gather relevant documents. (2) Grade: A Large Language Model (LLM) assesses each document chunk, categorizing them as 'relevant' or 'irrelevant'. (3) Correct: The system corrects the retrieved documents by applying a fallback strategy for irrelevant chunks, such as using a web search engine like Tavily, and filters out irrelevant information to ensure only accurate data is used. (4) Generate: The LLM generates its output based on the corrected context. Hierarchical CRAG further enhances this process through multi-query expansion, hierarchical L1→L2→L3 indexing, and an innovative grading approach known as Tree-of-Thought (ToT) grading. ToT grading involves evaluating the retrieved information across three critical judge perspectives: Specificity, Completeness, and Accuracy. This multi-faceted evaluation ensures that the information provided is not only accurate but also comprehensive and relevant to the query. Unlike naive RAG, which relies on a straightforward retrieval and generation process without a robust grading mechanism, CRAG's incorporation of ToT grading and hierarchical retrieval significantly improves answer quality. The hierarchical approach allows for a more nuanced and detailed search, capturing a broader range of relevant information and reducing the likelihood of omitting crucial details. Furthermore, by evaluating the retrieved documents through the lens of Specificity, Completeness, and Accuracy, CRAG can provide more precise and reliable outputs. For instance, in a scenario where a user queries for information on a complex historical event, a naive RAG system might retrieve a broad range of documents, some of which may be irrelevant or inaccurate. In contrast, CRAG's hierarchical retrieval and ToT grading would enable the system to pinpoint the most relevant, comprehensive, and accurate documents, leading to a more informed and reliable response. This advancement in retrieval and grading methodology underscores the potential of CRAG to outperform naive RAG in terms of answer quality, especially in complex and high-stakes information retrieval tasks.
+[2026-06-13 01:15:01] [CLIENT] [INFO] Total intermediate steps: 3
+[2026-06-13 01:15:01] [CLIENT] [DEBUG] Step 1 | tool=tavily_search | input=Corrective RAG (CRAG) and Tree-of-Thought grading | obs={'query': 'Corrective RAG (CRAG) and Tree-of-Thought grading', 'follow_up_questions': None, 'answer': "Corrective RAG (CRAG) improves RAG systems by evaluating and correcting retrieved documents for a
+[2026-06-13 01:15:01] [CLIENT] [DEBUG] Log persisted | ns=logs.agent.planning.tavily_search | key=1781309701286-1-dd5522 | type=tool_invocation | status=success
+[2026-06-13 01:15:01] [CLIENT] [DEBUG] Step 2 | tool=remote_crag_tool | input=Corrective RAG (CRAG) and Tree-of-Thought grading | obs=[RAG_CRAG — L2-crag]
+Corrective RAG (CRAG) pipeline:
+1. Retrieve : Standard similarity search.
+2. Grade    : LLM evaluates each chunk — 'relevant' or 'irrelevant'.
+3. Correct  :
+   • All irrelevant → 
+[2026-06-13 01:15:01] [CLIENT] [DEBUG] Log persisted | ns=logs.agent.planning.remote_crag_tool | key=1781309701406-2-3481ca | type=tool_invocation | status=success
+[2026-06-13 01:15:01] [CLIENT] [DEBUG] Step 3 | tool=remote_reflection_tool | input={"draft_answer": "Corrective RAG (CRAG) improves RAG systems by evaluating and correcting retrieved documents for accura | obs=CallToolResult(content=[TextContent(type='text', text='{\n  "critique": "The draft answer provides a good overview of Corrective RAG (CRAG) and its pipeline, but it lacks a clear explanation of Tree-o
+[2026-06-13 01:15:01] [CLIENT] [DEBUG] Log persisted | ns=logs.agent.planning.remote_reflection_tool | key=1781309701515-3-c69dc3 | type=tool_invocation | status=success
+[2026-06-13 01:15:01] [CLIENT] [INFO] ──────────────────────────────────────────────────────────────────────
+[2026-06-13 01:15:01] [CLIENT] [INFO] TURN 3/3 | session=1838a1aa-ffb0-489b-8004-c8f5e4673661
+[2026-06-13 01:15:01] [CLIENT] [INFO] Query submitted to agent: 'Why is observability critical for distributed multi-agent MCP systems, and how do structured vector logs improve anomaly detection?'
+[2026-06-13 01:15:01] [CLIENT] [DEBUG] Log persisted | ns=logs.agent.session | key=1781309701628-b4f98bee | type=tool_invocation | status=success
+[2026-06-13 01:15:34] [CLIENT] [INFO] remote_crag_tool invoked | query='observability critical distributed multi-agent MCP systems'
+[2026-06-13 01:15:34] [CLIENT] [INFO] Reading server resource 'knowledge://domain/observability%20critical%20distributed%20multi-agent%20MCP%20systems'
+[2026-06-13 01:15:34] [SERVER] [INFO] [2026-06-13 01:15:34] CRAG resource invoked | query='observability critical distributed multi-agent MCP systems'
+[2026-06-13 01:15:34] [SERVER] [DEBUG] CRAG Step 1 — dispatching Multi-Query Expansion to client LLM
+[2026-06-13 01:15:34] [CLIENT] [INFO] Sampling request received from server | request_id=0
+[2026-06-13 01:15:35] [CLIENT] [INFO] Sampling response generated | tokens≈22
+[2026-06-13 01:15:35] [CLIENT] [DEBUG] Log persisted | ns=logs.mcp.client.sampling | key=1781309735370-a99e5e11 | type=sampling_request | status=success
+[2026-06-13 01:15:35] [SERVER] [INFO] Multi-query expansion: 4 queries ready
+[2026-06-13 01:15:35] [SERVER] [DEBUG] CRAG Step 2 — Hierarchical Indexing retrieval started
+[2026-06-13 01:15:35] [SERVER] [INFO] Hierarchical retrieval: 6 unique chunks found
+[2026-06-13 01:15:35] [SERVER] [DEBUG] CRAG Step 3 — Initiating ToT Evaluation on retrieved chunks
+[2026-06-13 01:15:38] [SERVER] [INFO] ToT scores — Specificity:0.24 Completeness:0.16 Novelty:0.19 | avg=0.20
+[2026-06-13 01:15:38] [SERVER] [INFO] Tavily fallback triggered — avg ToT score below 0.6
+[2026-06-13 01:15:38] [SERVER] [INFO] Tavily fallback complete — web context appended
+[2026-06-13 01:15:38] [SERVER] [INFO] CRAG resource complete | fallback_used=True
+[2026-06-13 01:15:38] [CLIENT] [DEBUG] Log persisted | ns=logs.mcp.server.resources.crag | key=1781309738196-08b53224 | type=resource_read | status=success
+[2026-06-13 01:15:38] [CLIENT] [INFO] CRAGResponse validated | fallback_used=True | avg_tot=0.196 | queries=4
+[2026-06-13 01:16:00] [CLIENT] [INFO] remote_reflection_tool invoked by agent
+[2026-06-13 01:16:00] [CLIENT] [DEBUG] ReflectionRequest validated | query='Why is observability critical for distributed multi-agent MC'
+[2026-06-13 01:16:00] [CLIENT] [INFO] Calling server tool 'reflection_tool'
+[2026-06-13 01:16:00] [SERVER] [INFO] [2026-06-13 01:16:00] reflection_tool invoked — starting 2-stage critique loop
+[2026-06-13 01:16:00] [SERVER] [DEBUG] Stage 1 — dispatching Critique sampling request to client LLM
+[2026-06-13 01:16:00] [CLIENT] [INFO] Sampling request received from server | request_id=0
+[2026-06-13 01:16:02] [CLIENT] [INFO] Sampling response generated | tokens≈101
+[2026-06-13 01:16:02] [CLIENT] [DEBUG] Log persisted | ns=logs.mcp.client.sampling | key=1781309762170-8a58b298 | type=sampling_request | status=success
+[2026-06-13 01:16:02] [SERVER] [INFO] Stage 1 complete | is_sufficient=False
+[2026-06-13 01:16:02] [SERVER] [DEBUG] Stage 2 — dispatching Correction sampling request to client LLM
+[2026-06-13 01:16:02] [CLIENT] [INFO] Sampling request received from server | request_id=1
+[2026-06-13 01:16:03] [CLIENT] [INFO] Sampling response generated | tokens≈197
+[2026-06-13 01:16:03] [CLIENT] [DEBUG] Log persisted | ns=logs.mcp.client.sampling | key=1781309763244-c2bb053a | type=sampling_request | status=success
+[2026-06-13 01:16:03] [SERVER] [INFO] Stage 2 correction complete — refined answer assembled
+[2026-06-13 01:16:03] [CLIENT] [DEBUG] Log persisted | ns=logs.mcp.server.tools.reflection_tool | key=1781309763373-53e61d0e | type=tool_invocation | status=success
+[2026-06-13 01:16:03] [CLIENT] [INFO] ReflectionResponse received | is_sufficient=False
+[2026-06-13 01:16:39] [CLIENT] [INFO] Agent completed execution
+[2026-06-13 01:16:39] [CLIENT] [INFO] Final Answer: Observability is critical for distributed multi-agent MCP systems as it enables the monitoring of complex interactions between multiple agents, ensuring system performance, reliability, and fault tolerance. The unique challenges in these systems include the impact of multiple agents on system observability, the role of Model Predictive Control (MPC) in optimizing agent behavior, and the need for real-time monitoring and control. To address these challenges, structured vector logs play a vital role in improving anomaly detection by providing a standardized and efficient way to collect, store, and analyze log data from multiple agents. This allows for the identification of patterns and anomalies that may not be apparent through traditional logging methods. Effective observability in distributed multi-agent MCP systems relies on a combination of distributed tracing, real-time logs, and machine learning algorithms to analyze log data and detect anomalies. For instance, techniques such as log clustering and dimensionality reduction can be used to identify patterns in log data, while machine learning algorithms can be trained to detect anomalies and predict potential system failures. By implementing these techniques, developers can improve the reliability and performance of distributed multi-agent MCP systems, and reduce the risk of system failures and downtime.
+[2026-06-13 01:16:39] [CLIENT] [INFO] Total intermediate steps: 3
+[2026-06-13 01:16:39] [CLIENT] [DEBUG] Step 1 | tool=tavily_search | input=observability critical distributed multi-agent MCP systems | obs={'query': 'observability critical distributed multi-agent MCP systems', 'follow_up_questions': None, 'answer': 'Observability in distributed multi-agent systems is crucial for monitoring interactions 
+[2026-06-13 01:16:40] [CLIENT] [DEBUG] Log persisted | ns=logs.agent.planning.tavily_search | key=1781309799920-1-665aaa | type=tool_invocation | status=success
+[2026-06-13 01:16:40] [CLIENT] [DEBUG] Step 2 | tool=remote_crag_tool | input=observability critical distributed multi-agent MCP systems | obs=[MCP_PROTOCOL — L2-primitives]
+MCP defines five primitives:
+• Tools      — callable functions the agent can invoke (POST /mcp).
+• Resources  — readable data sources identified by URI (e.g. knowledge:/
+[2026-06-13 01:16:40] [CLIENT] [DEBUG] Log persisted | ns=logs.agent.planning.remote_crag_tool | key=1781309800031-2-6e2c09 | type=tool_invocation | status=success
+[2026-06-13 01:16:40] [CLIENT] [DEBUG] Step 3 | tool=remote_reflection_tool | input={"draft_answer": "Observability in distributed multi-agent systems is crucial for monitoring interactions and ensuring p | obs=CallToolResult(content=[TextContent(type='text', text='{\n  "critique": "The draft answer only partially addresses the original query. It highlights the importance of observability in distributed mult
+[2026-06-13 01:16:40] [CLIENT] [DEBUG] Log persisted | ns=logs.agent.planning.remote_reflection_tool | key=1781309800118-3-e5faaa | type=tool_invocation | status=success
+[2026-06-13 01:16:40] [CLIENT] [INFO] Agent session complete — flat logs → mcp_agent_system.log, vector logs → mcp_agent_log.db

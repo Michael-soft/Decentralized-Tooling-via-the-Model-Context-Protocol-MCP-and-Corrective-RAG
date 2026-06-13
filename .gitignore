@@ -8,9 +8,17 @@ build/
 *.egg-info/
 .uv/
 
-# Environment
+# Environment (secrets — never commit; use .env.example instead)
 .env
 .env.local
 
-# Logs (keep sample; ignore runtime-generated copies)
-!agent_system.log
+# Local model / HF cache
+.cache/
+
+# OS cruft
+.DS_Store
+
+# Deliverable artifacts ARE committed on purpose (sample evidence):
+#   mcp_agent_system.log · mcp_agent_log.db · analysis_agent.log · charts/
+# Stage 2 carry-over flat log (regenerated; not a Stage 3 deliverable):
+agent_system.log

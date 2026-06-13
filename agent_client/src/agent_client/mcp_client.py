@@ -26,6 +26,8 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import time
+import uuid
 from typing import Any
 from urllib.parse import quote
 
@@ -36,7 +38,9 @@ from langchain_core.tools import tool
 from mcp.shared.context import RequestContext
 from pydantic import BaseModel, Field
 
+from .log_store import LogEntry, estimate_tokens, get_log_store
 from .logger import client_log, server_log
+from .session import get_session_id
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -135,6 +139,52 @@ def _get_sampling_llm():
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+#  Vector-store persistence helper
+#  Every MCP interaction is mirrored into the hierarchical vector log store
+#  (Stage 3) in addition to the flat dual-stream file (Stage 2). Failures here
+#  must never break the operational agent — they are swallowed and logged.
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _persist(
+    *,
+    interaction_type: str,
+    content: str,
+    namespace: tuple[str, ...],
+    component: str,
+    tool_name: str | None = None,
+    target: str | None = None,
+    request_id: str | None = None,
+    latency_ms: float = 0.0,
+    status: str = "success",
+    error: str | None = None,
+    requested_schema: dict | None = None,
+) -> None:
+    """Build a validated LogEntry and write it to the hierarchical store."""
+    try:
+        entry = LogEntry(
+            session_id=get_session_id(),
+            mcp_interaction_type=interaction_type,           # type: ignore[arg-type]
+            content=content,
+            component=component,
+            tool_name=tool_name,
+            target=target,
+            request_id=request_id,
+            latency_ms=round(latency_ms, 2),
+            token_estimate=estimate_tokens(content),
+            status=status,                                   # type: ignore[arg-type]
+            error=error,
+            requested_schema=requested_schema or {},
+            # Data-guardrail demonstrator: an integer-keyed config map. JSON will
+            # stringify these keys; the store round-trip casts them back to int.
+            config_map={0: interaction_type, 1: component, 2: status},
+        )
+        key = f"{int(time.time() * 1000)}-{uuid.uuid4().hex[:8]}"
+        get_log_store().record(entry, namespace, key)
+    except Exception as exc:
+        client_log.error(f"_persist failed ({interaction_type}): {exc}")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 #  Callback Handlers
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -174,16 +224,50 @@ async def sampling_handler(
     lc_messages: list = []
     if system:
         lc_messages.append(SystemMessage(content=system))
-    lc_messages.append(HumanMessage(content="\n".join(human_parts)))
+    human_text = "\n".join(human_parts)
+    lc_messages.append(HumanMessage(content=human_text))
 
+    # Capture any nested requestedSchema / structural metadata the server sent.
+    try:
+        req_schema = params.model_dump(exclude_none=True)  # type: ignore[attr-defined]
+    except Exception:
+        req_schema = {"systemPrompt": system}
+    req_id = str(getattr(context, "request_id", ""))
+
+    start = time.perf_counter()
     try:
         llm       = _get_sampling_llm()
         response  = await llm.ainvoke(lc_messages)
         generated = response.content
+        latency   = (time.perf_counter() - start) * 1000.0
         client_log.info(f"Sampling response generated | tokens≈{len(generated.split())}")
+        _persist(
+            interaction_type="sampling_request",
+            content=f"PROMPT: {human_text}\n\nRESPONSE: {generated}",
+            namespace=get_log_store().namespace("mcp", "client", "sampling"),
+            component="mcp.client.sampling",
+            tool_name="create_message",
+            target="agent_client.groq_llm",
+            request_id=req_id,
+            latency_ms=latency,
+            requested_schema=req_schema,
+        )
         return generated
     except Exception as exc:
+        latency = (time.perf_counter() - start) * 1000.0
         client_log.error(f"Sampling handler error: {exc}")
+        _persist(
+            interaction_type="sampling_request",
+            content=f"PROMPT: {human_text}\n\nERROR: {exc}",
+            namespace=get_log_store().namespace("mcp", "client", "sampling"),
+            component="mcp.client.sampling",
+            tool_name="create_message",
+            request_id=req_id,
+            latency_ms=latency,
+            status="error",
+            error=str(exc),
+            requested_schema=req_schema,
+        )
         return f"[Sampling error: {exc}]"
 
 
@@ -213,26 +297,68 @@ async def _call_server_tool(tool_name: str, args: dict[str, Any]) -> str:
     """Open a FastMCP Client session, call a tool, return text content."""
     client_log.info(f"Calling server tool '{tool_name}'")
     mcp_client = _get_client()
-    async with mcp_client:
-        await mcp_client.initialize()
-        result = await mcp_client.call_tool(tool_name, args)
-    if isinstance(result, list) and result:
-        block = result[0]
-        return block.text if hasattr(block, "text") else str(block)
-    return str(result)
+    start = time.perf_counter()
+    status, error = "success", None
+    text = ""
+    try:
+        async with mcp_client:
+            await mcp_client.initialize()
+            result = await mcp_client.call_tool(tool_name, args)
+        if isinstance(result, list) and result:
+            block = result[0]
+            text = block.text if hasattr(block, "text") else str(block)
+        else:
+            text = str(result)
+        return text
+    except Exception as exc:
+        status, error, text = "error", str(exc), f"[tool error: {exc}]"
+        raise
+    finally:
+        _persist(
+            interaction_type="tool_invocation",
+            content=f"TOOL {tool_name} args={json.dumps(args)[:500]}\nRESULT: {text[:1500]}",
+            namespace=get_log_store().namespace("mcp", "server", "tools", tool_name),
+            component=f"mcp.server.tools.{tool_name}",
+            tool_name=tool_name,
+            target="mcp_server",
+            latency_ms=(time.perf_counter() - start) * 1000.0,
+            status=status,
+            error=error,
+        )
 
 
 async def _read_server_resource(uri: str) -> str:
     """Open a FastMCP Client session, read a resource URI, return text content."""
     client_log.info(f"Reading server resource '{uri}'")
     mcp_client = _get_client()
-    async with mcp_client:
-        await mcp_client.initialize()
-        result = await mcp_client.read_resource(uri)
-    if isinstance(result, list) and result:
-        block = result[0]
-        return block.text if hasattr(block, "text") else str(block)
-    return str(result)
+    start = time.perf_counter()
+    status, error = "success", None
+    text = ""
+    try:
+        async with mcp_client:
+            await mcp_client.initialize()
+            result = await mcp_client.read_resource(uri)
+        if isinstance(result, list) and result:
+            block = result[0]
+            text = block.text if hasattr(block, "text") else str(block)
+        else:
+            text = str(result)
+        return text
+    except Exception as exc:
+        status, error, text = "error", str(exc), f"[resource error: {exc}]"
+        raise
+    finally:
+        _persist(
+            interaction_type="resource_read",
+            content=f"RESOURCE {uri}\nRESULT: {text[:1500]}",
+            namespace=get_log_store().namespace("mcp", "server", "resources", "crag"),
+            component="mcp.server.resources.crag",
+            tool_name="crag_knowledge_resource",
+            target="mcp_server",
+            latency_ms=(time.perf_counter() - start) * 1000.0,
+            status=status,
+            error=error,
+        )
 
 
 def _run_async(coro) -> str:

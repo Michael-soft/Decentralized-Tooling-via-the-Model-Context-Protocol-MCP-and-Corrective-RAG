@@ -1,0 +1,133 @@
+[2026-06-13 01:19:22] [ANALYSIS] [INFO] Log Analysis Agent starting up (decoupled process)
+[2026-06-13 01:19:22] [ANALYSIS] [INFO] Reading log store: mcp_agent_log.db
+[2026-06-13 01:19:22] [ANALYSIS] [INFO] Building Log Analysis Agent | tools=['semantic_log_search', 'sync_knowledge_graph', 'analyze_tool_latency', 'analyze_token_consumption', 'analyze_error_frequency']
+[2026-06-13 01:19:22] [ANALYSIS] [INFO] ======================================================================
+[2026-06-13 01:19:22] [ANALYSIS] [INFO] Analysis query: 'Search the logs for any slow or anomalous MCP sampling interactions and summarise what you find.'
+[2026-06-13 01:19:23] [ANALYSIS] [INFO] semantic_log_search | query='slow or anomalous MCP sampling interactions' | limit=6
+[2026-06-13 01:19:24] [ANALYSIS] [INFO] Log store opened (read) → mcp_agent_log.db
+[2026-06-13 01:19:24] [ANALYSIS] [INFO] semantic_log_search | 6 hits returned
+[2026-06-13 01:20:34] [ANALYSIS] [INFO] Log Analysis Agent starting up (decoupled process)
+[2026-06-13 01:20:34] [ANALYSIS] [INFO] Reading log store: mcp_agent_log.db
+[2026-06-13 01:20:35] [ANALYSIS] [INFO] Building Log Analysis Agent | tools=['semantic_log_search', 'sync_knowledge_graph', 'analyze_tool_latency', 'analyze_token_consumption', 'analyze_error_frequency']
+[2026-06-13 01:20:35] [ANALYSIS] [INFO] ======================================================================
+[2026-06-13 01:20:35] [ANALYSIS] [INFO] Analysis query: 'Search the logs for any slow or anomalous MCP sampling interactions and summarise what you find.'
+[2026-06-13 01:20:36] [ANALYSIS] [INFO] semantic_log_search | query='slow or anomalous MCP sampling interactions' | limit=6
+[2026-06-13 01:20:36] [ANALYSIS] [INFO] Log store opened (read) → mcp_agent_log.db
+[2026-06-13 01:20:36] [ANALYSIS] [INFO] semantic_log_search | 6 hits returned
+[2026-06-13 01:20:37] [ANALYSIS] [INFO] analyze_tool_latency | window=10
+[2026-06-13 01:20:38] [ANALYSIS] [INFO] analyze_tool_latency | chart saved → charts/chart_20260613_012037.png
+[2026-06-13 01:20:39] [ANALYSIS] [DEBUG] HumanMessage | Search the logs for any slow or anomalous MCP sampling interactions and summarise what you find.
+[2026-06-13 01:20:39] [ANALYSIS] [INFO] TOOL CALL | semantic_log_search args={'query': 'slow or anomalous MCP sampling interactions'}
+[2026-06-13 01:20:39] [ANALYSIS] [DEBUG] TOOL RESULT | semantic_log_search | {
+  "query": "slow or anomalous MCP sampling interactions",
+  "matches": [
+    {
+      "score": 0.75,
+      "namespace": "logs.mcp.client.sampling",
+      "session_id": "1838a1aa-ffb0-489b-8004-c8f5e4
+[2026-06-13 01:20:39] [ANALYSIS] [INFO] TOOL CALL | analyze_tool_latency args={'window': '10'}
+[2026-06-13 01:20:39] [ANALYSIS] [DEBUG] TOOL RESULT | analyze_tool_latency | {
+  "metric": "tool_latency_moving_average",
+  "window": 10,
+  "interactions": 27,
+  "overall_avg_ms": 12695.16,
+  "per_tool": [
+    {
+      "tool_name": "crag_knowledge_resource",
+      "count": 3,
+ 
+[2026-06-13 01:20:39] [ANALYSIS] [DEBUG] AIMessage | The search results show several slow or anomalous MCP sampling interactions, with latency values ranging from 845.88ms to 1382.66ms. The `analyze_tool_latency` function call reveals that the average l
+[2026-06-13 01:20:39] [ANALYSIS] [INFO] Final analysis answer: The search results show several slow or anomalous MCP sampling interactions, with latency values ranging from 845.88ms to 1382.66ms. The `analyze_tool_latency` function call reveals that the average latency for the "create_message" tool is 1289.76ms, with a maximum latency of 1797.08ms. The chart ge
+[2026-06-13 01:20:39] [ANALYSIS] [INFO] ======================================================================
+[2026-06-13 01:20:39] [ANALYSIS] [INFO] Analysis query: 'Analyze tool latency trends and token consumption, and tell me which component is the heaviest.'
+[2026-06-13 01:20:39] [ANALYSIS] [INFO] analyze_tool_latency | window=5
+[2026-06-13 01:20:39] [ANALYSIS] [INFO] analyze_token_consumption
+[2026-06-13 01:20:40] [ANALYSIS] [INFO] analyze_tool_latency | chart saved → charts/latency_trends.png
+[2026-06-13 01:20:40] [ANALYSIS] [INFO] analyze_token_consumption | chart saved → charts/token_consumption.png
+[2026-06-13 01:20:40] [ANALYSIS] [DEBUG] HumanMessage | Analyze tool latency trends and token consumption, and tell me which component is the heaviest.
+[2026-06-13 01:20:40] [ANALYSIS] [INFO] TOOL CALL | analyze_tool_latency args={'save_path': 'charts/latency_trends.png', 'window': '5'}
+[2026-06-13 01:20:40] [ANALYSIS] [INFO] TOOL CALL | analyze_token_consumption args={'save_path': 'charts/token_consumption.png'}
+[2026-06-13 01:20:40] [ANALYSIS] [DEBUG] TOOL RESULT | analyze_tool_latency | {
+  "metric": "tool_latency_moving_average",
+  "window": 5,
+  "interactions": 27,
+  "overall_avg_ms": 12695.16,
+  "per_tool": [
+    {
+      "tool_name": "crag_knowledge_resource",
+      "count": 3,
+  
+[2026-06-13 01:20:40] [ANALYSIS] [DEBUG] TOOL RESULT | analyze_token_consumption | {
+  "metric": "token_consumption",
+  "total_tokens": 9901,
+  "by_tool_type": [
+    {
+      "tool_name": "crag_knowledge_resource",
+      "interaction_type": "resource_read",
+      "token_estimate": 47
+[2026-06-13 01:20:40] [ANALYSIS] [DEBUG] AIMessage | The heaviest component is the "remote_reflection_tool" with a mean latency of 34504.05 ms and a token estimate of 3327.
+[2026-06-13 01:20:40] [ANALYSIS] [INFO] Final analysis answer: The heaviest component is the "remote_reflection_tool" with a mean latency of 34504.05 ms and a token estimate of 3327.
+[2026-06-13 01:20:40] [ANALYSIS] [INFO] ======================================================================
+[2026-06-13 01:20:40] [ANALYSIS] [INFO] Analysis query: 'Check the error frequency across components, then sync the knowledge graph to Neo4j and report exactly which nodes and edges were committed.'
+[2026-06-13 01:20:45] [ANALYSIS] [INFO] analyze_error_frequency
+[2026-06-13 01:20:45] [ANALYSIS] [INFO] sync_knowledge_graph | 27 log entries read
+[2026-06-13 01:20:45] [ANALYSIS] [INFO] analyze_error_frequency | chart saved → charts/error_frequency.png
+[2026-06-13 01:20:45] [ANALYSIS] [INFO] Connecting to Neo4j Aura → neo4j+s://e254bce7.databases.neo4j.io
+[2026-06-13 01:20:48] [ANALYSIS] [INFO] Neo4j projection committed | nodes=28 edges=36
+[2026-06-13 01:20:55] [ANALYSIS] [INFO] analyze_error_frequency
+[2026-06-13 01:20:55] [ANALYSIS] [INFO] sync_knowledge_graph | 27 log entries read
+[2026-06-13 01:20:55] [ANALYSIS] [INFO] Connecting to Neo4j Aura → neo4j+s://e254bce7.databases.neo4j.io
+[2026-06-13 01:20:55] [ANALYSIS] [INFO] analyze_error_frequency | chart saved → charts/error_frequency.png
+[2026-06-13 01:20:57] [ANALYSIS] [INFO] Neo4j projection committed | nodes=28 edges=36
+[2026-06-13 01:21:08] [ANALYSIS] [DEBUG] HumanMessage | Check the error frequency across components, then sync the knowledge graph to Neo4j and report exactly which nodes and edges were committed.
+[2026-06-13 01:21:08] [ANALYSIS] [INFO] TOOL CALL | analyze_error_frequency args={'save_path': 'charts/error_frequency.png'}
+[2026-06-13 01:21:08] [ANALYSIS] [INFO] TOOL CALL | sync_knowledge_graph args={}
+[2026-06-13 01:21:08] [ANALYSIS] [DEBUG] TOOL RESULT | analyze_error_frequency | {
+  "metric": "error_frequency",
+  "total_interactions": 27,
+  "error_count": 0,
+  "error_rate": 0.0,
+  "by_component": [
+    {
+      "component": "agent.planning.remote_crag_tool",
+      "status": "s
+[2026-06-13 01:21:08] [ANALYSIS] [DEBUG] TOOL RESULT | sync_knowledge_graph | {
+  "status": "committed",
+  "uri": "neo4j+s://e254bce7.databases.neo4j.io",
+  "nodes": {
+    "Session": 1,
+    "AgentAction": 21,
+    "MCPServerCall": 6
+  },
+  "edges": {
+    "TRIGGERED": 21,
+    "RO
+[2026-06-13 01:21:08] [ANALYSIS] [INFO] TOOL CALL | analyze_error_frequency args={'save_path': 'charts/error_frequency.png'}
+[2026-06-13 01:21:08] [ANALYSIS] [INFO] TOOL CALL | sync_knowledge_graph args={}
+[2026-06-13 01:21:08] [ANALYSIS] [DEBUG] TOOL RESULT | analyze_error_frequency | {
+  "metric": "error_frequency",
+  "total_interactions": 27,
+  "error_count": 0,
+  "error_rate": 0.0,
+  "by_component": [
+    {
+      "component": "agent.planning.remote_crag_tool",
+      "status": "s
+[2026-06-13 01:21:08] [ANALYSIS] [DEBUG] TOOL RESULT | sync_knowledge_graph | {
+  "status": "committed",
+  "uri": "neo4j+s://e254bce7.databases.neo4j.io",
+  "nodes": {
+    "Session": 1,
+    "AgentAction": 21,
+    "MCPServerCall": 6
+  },
+  "edges": {
+    "TRIGGERED": 21,
+    "RO
+[2026-06-13 01:21:08] [ANALYSIS] [DEBUG] AIMessage | The error frequency analysis shows that there are no errors across all components, with a total of 27 interactions and an error rate of 0.0. The chart has been saved to charts/error_frequency.png. 
+
+T
+[2026-06-13 01:21:08] [ANALYSIS] [INFO] Final analysis answer: The error frequency analysis shows that there are no errors across all components, with a total of 27 interactions and an error rate of 0.0. The chart has been saved to charts/error_frequency.png. 
+
+The knowledge graph has been synced to Neo4j, with 1 Session node, 21 AgentAction nodes, and 6 MCPSer
+[2026-06-13 01:21:09] [ANALYSIS] [INFO] Analysis session complete — logs → analysis_agent.log

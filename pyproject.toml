@@ -1,8 +1,11 @@
 # ── Root uv Workspace ─────────────────────────────────────────────────────────
-# Declares the two sub-packages managed as a single monorepo.
-# Run either package with:
-#   uv run --package mcp-server   mcp-server
-#   uv run --package agent-client agent-client
+# Declares the three sub-packages managed as a single monorepo.
+# Run a package with:
+#   uv run --package mcp-server         mcp-server
+#   uv run --package agent-client       agent-client
+#   uv run --package analysis-dashboard analysis-agent
+#   uv run --package analysis-dashboard streamlit run \
+#       analysis_dashboard/src/analysis_dashboard/app.py
 
 [tool.uv]
-workspace = { members = ["mcp_server", "agent_client"] }
+workspace = { members = ["mcp_server", "agent_client", "analysis_dashboard"] }
