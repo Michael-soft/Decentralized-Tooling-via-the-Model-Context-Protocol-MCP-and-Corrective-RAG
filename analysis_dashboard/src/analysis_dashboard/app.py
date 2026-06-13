@@ -55,18 +55,18 @@ def _render_tool_result(name: str, content: str) -> None:
         status = data.get("status")
         if status == "committed":
             st.success(
-                f"✅ Neo4j sync committed — {data.get('nodes_total', 0)} nodes, "
+                f" Neo4j sync committed — {data.get('nodes_total', 0)} nodes, "
                 f"{data.get('edges_total', 0)} edges → {data.get('uri', '')}"
             )
             c1, c2 = st.columns(2)
             c1.json({"nodes": data.get("nodes", {})})
             c2.json({"edges": data.get("edges", {})})
         elif status == "not_configured":
-            st.warning(f"⚠️ Neo4j not configured — {data.get('message', '')} "
+            st.warning(f" Neo4j not configured — {data.get('message', '')} "
                        f"(planned {data.get('planned_nodes', 0)} nodes / "
                        f"{data.get('planned_edges', 0)} edges)")
         else:
-            st.error(f"❌ Graph sync error — {data.get('message', data)}")
+            st.error(f" Graph sync error — {data.get('message', data)}")
         return
 
     # Chart-producing analytics tools
@@ -84,7 +84,7 @@ def _run_and_render(agent, query: str) -> None:
         messages = result.get("messages", [])
 
         # Structural reasoning trace
-        with st.expander("🧠 Agent reasoning trace (step-by-step)", expanded=True):
+        with st.expander(" Agent reasoning trace (step-by-step)", expanded=True):
             for msg in messages:
                 role = type(msg).__name__
                 tool_calls = getattr(msg, "tool_calls", None)
@@ -94,7 +94,7 @@ def _run_and_render(agent, query: str) -> None:
                         if tc.get("args"):
                             st.code(json.dumps(tc["args"], indent=2), language="json")
                 elif role == "ToolMessage":
-                    st.markdown(f"**📤 Result ← `{getattr(msg, 'name', '?')}`**")
+                    st.markdown(f"** Result ← `{getattr(msg, 'name', '?')}`**")
                     _render_tool_result(getattr(msg, "name", ""), str(msg.content))
                 elif getattr(msg, "content", None) and role == "AIMessage":
                     st.markdown(f"> {str(msg.content)[:1200]}")
