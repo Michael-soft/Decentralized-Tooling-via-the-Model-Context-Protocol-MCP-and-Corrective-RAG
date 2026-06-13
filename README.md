@@ -260,9 +260,12 @@ A successful end-to-end run (operational plane + analysis plane + Neo4j Aura),
 captured **Sat 13 Jun 2026, 02:52–02:54** with the machine clock visible. See
 [`screenshots/`](screenshots/) for the full index.
 
-| Agent client trace | Analysis agent → Neo4j commit | Dashboard latency chart | Neo4j Aura graph |
+| Agent client trace | MCP server protocol | Analysis agent → Neo4j commit | Dashboard latency chart |
 |---|---|---|---|
-| ![client](screenshots/01-agent-client-trace.png) | ![analysis](screenshots/03-analysis-agent-neo4j-commit.png) | ![dashboard](screenshots/04-dashboard-latency-chart.png) | ![graph](screenshots/05-neo4j-aura-graph.png) |
+| ![client](screenshots/01-agent-client-trace.png) | ![server](screenshots/02-mcp-server-protocol.png) | ![analysis](screenshots/03-analysis-agent-neo4j-commit.png) | ![dashboard](screenshots/04-dashboard-latency-chart.png) |
+
+> The Neo4j Aura graph view (`screenshots/05-neo4j-aura-graph.png`) shows the projected
+> `(:Session)-[:TRIGGERED]->(:AgentAction)-[:ROUTED_TO]->(:MCPServerCall)` property graph.
 
 ---
 
