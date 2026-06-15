@@ -3,10 +3,11 @@
 A production-grade **uv monorepo** spanning three decoupled processes:
 
 1. **`mcp_server`** — FastMCP server exposing a **Reflection Tool** (MCP Sampling) and a
-   **Hierarchical CRAG Resource** (ToT grading + Tavily fallback) over `streamable-http`.
-2. **`agent_client`** — a LangChain ReAct agent that consumes the server, and (Stage 3)
-   persists every MCP interaction into an **embedded, vector-enabled LangGraph SQLite
-   log store** using hierarchical namespaces.
+   **Hierarchical CRAG Resource** (LLM Tree-of-Thought grading via Sampling + Tavily
+   fallback) over `streamable-http`.
+2. **`agent_client`** — a LangChain agent (`create_agent`) that consumes the server, and
+   (Stage 3) persists every MCP interaction into an **embedded, vector-enabled LangGraph
+   SQLite log store** using hierarchical namespaces.
 3. **`analysis_dashboard`** — a **decoupled Log Analysis Agent** (LangChain `create_agent`)
    that semantically searches the logs, projects causal execution paths into a **Neo4j
    Aura DB** knowledge graph, computes performance trends (matplotlib/seaborn), and serves
@@ -36,7 +37,7 @@ Decentralized-Tooling-via-the-Model-Context-Protocol-MCP-and-Corrective-RAG/
 │       ├── session.py              ← per-run session UUID
 │       ├── log_store.py            ← vector SQLite store + LogEntry schema + guardrails
 │       ├── mcp_client.py           ← FastMCP client, sampling handler, instrumented @tools
-│       └── main.py                 ← ReAct agent entrypoint (multi-turn, vector-logged)
+│       └── main.py                 ← create_agent entrypoint (multi-turn, vector-logged)
 └── analysis_dashboard/
     └── src/analysis_dashboard/
         ├── embeddings.py           ← mirror of the client embedding config
@@ -192,7 +193,7 @@ uv run --package analysis-dashboard analysis-agent
 
 ```
 ┌──────────────── OPERATIONAL PLANE (Terminals 1 + 2) ────────────────┐
-│  agent_client (ReAct / Groq)                                        │
+│  agent_client (create_agent / Groq)                                 │
 │    ├─ tavily_search                                                 │
 │    ├─ remote_crag_tool ───────────► mcp_server  knowledge://domain  │
 │    └─ remote_reflection_tool ─────► mcp_server  reflection_tool     │
@@ -256,16 +257,19 @@ RETURN s, a, c LIMIT 50;
 
 ## Screenshots
 
-A successful end-to-end run (operational plane + analysis plane + Neo4j Aura),
-captured **Sat 13 Jun 2026, 02:52–02:54** with the machine clock visible. See
-[`screenshots/`](screenshots/) for the full index.
+Evidence of a successful end-to-end run. The **primary deliverable is the Streamlit
+dashboard** captured in a real browser as a **full-window** screenshot showing the
+**executing machine's clock** — the dashboard renders its own `🕒 Executing-machine time`
+banner at the top of the page, so the timestamp is visible both in-app and in the OS menu
+bar. See [`screenshots/`](screenshots/) for the capture checklist and the full index.
 
-| Agent client trace | MCP server protocol | Analysis agent → Neo4j commit | Dashboard latency chart |
-|---|---|---|---|
-| ![client](screenshots/01-agent-client-trace.png) | ![server](screenshots/02-mcp-server-protocol.png) | ![analysis](screenshots/03-analysis-agent-neo4j-commit.png) | ![dashboard](screenshots/04-dashboard-latency-chart.png) |
-
-> The Neo4j Aura graph view (`screenshots/05-neo4j-aura-graph.png`) shows the projected
-> `(:Session)-[:TRIGGERED]->(:AgentAction)-[:ROUTED_TO]->(:MCPServerCall)` property graph.
+| # | Capture | Shows |
+|---|---|---|
+| 1 | `01-dashboard-full-ui.png` | Full Streamlit dashboard (clock banner, sidebar, reasoning trace, trend chart, diagnosis) — OS clock visible |
+| 2 | `02-dashboard-graph-sync.png` | Dashboard Neo4j sync notification (committed nodes/edges) — OS clock visible |
+| 3 | `03-agent-client-trace.png` | `agent_client` multi-turn tool-calling trace |
+| 4 | `04-mcp-server-protocol.png` | `mcp_server` streamable-http protocol + MCP Sampling round-trips |
+| 5 | `05-neo4j-aura-graph.png` | Neo4j Aura projected `(:Session)-[:TRIGGERED]->(:AgentAction)-[:ROUTED_TO]->(:MCPServerCall)` graph |
 
 ---
 
@@ -285,8 +289,9 @@ captured **Sat 13 Jun 2026, 02:52–02:54** with the machine clock visible. See
 
 ## Stage 2 (carried forward)
 
-The Stage 2 behaviour is unchanged and still documented in `REFLECTION.md`: the ReAct
-agent pulls the `hwchase17/react` prompt from LangSmith Hub, gathers facts via Tavily,
-retrieves graded domain knowledge via the CRAG resource, and verifies its draft via the
-2-stage Reflection tool — all over `streamable-http`, with the server holding no API keys
-(every LLM call is delegated back to the client via MCP Sampling).
+The Stage 2 pipeline is documented in `REFLECTION.md`. The agent — now built with the
+modern `create_agent` factory (native tool-calling, no legacy `create_react_agent` /
+`AgentExecutor`) — gathers facts via Tavily, retrieves graded domain knowledge via the
+CRAG resource, and verifies its draft via the 2-stage Reflection tool — all over
+`streamable-http`, with the server holding no API keys (every LLM call, including the
+Tree-of-Thought CRAG grading, is delegated back to the client via MCP Sampling).

@@ -146,3 +146,134 @@ The knowledge graph has been synced to Neo4j, with 1 Session node, 21 AgentActio
 [2026-06-13 02:27:51] [ANALYSIS] [INFO] Neo4j projection committed | nodes=85 edges=107
 [2026-06-13 02:31:44] [ANALYSIS] [INFO] analyze_tool_latency | window=10
 [2026-06-13 02:31:45] [ANALYSIS] [INFO] analyze_tool_latency | chart saved → charts/tool_latency.png
+[2026-06-15 22:34:29] [ANALYSIS] [INFO] Log Analysis Agent starting up (decoupled process)
+[2026-06-15 22:34:29] [ANALYSIS] [INFO] Reading log store: mcp_agent_log.db
+[2026-06-15 22:34:30] [ANALYSIS] [INFO] Building Log Analysis Agent | tools=['semantic_log_search', 'sync_knowledge_graph', 'analyze_tool_latency', 'analyze_token_consumption', 'analyze_error_frequency']
+[2026-06-15 22:34:30] [ANALYSIS] [INFO] ======================================================================
+[2026-06-15 22:34:30] [ANALYSIS] [INFO] Analysis query: 'Search the logs for any slow or anomalous MCP sampling interactions and summarise what you find.'
+[2026-06-15 22:34:30] [ANALYSIS] [INFO] semantic_log_search | query='slow or anomalous MCP sampling interactions' | limit=6
+[2026-06-15 22:34:31] [ANALYSIS] [INFO] Log store opened (read) → mcp_agent_log.db
+[2026-06-15 22:34:31] [ANALYSIS] [INFO] semantic_log_search | 6 hits returned
+[2026-06-15 22:34:32] [ANALYSIS] [INFO] analyze_tool_latency | window=3
+[2026-06-15 22:34:33] [ANALYSIS] [INFO] analyze_tool_latency | chart saved → charts/chart_20260615_223432.png
+[2026-06-15 22:34:34] [ANALYSIS] [DEBUG] HumanMessage | Search the logs for any slow or anomalous MCP sampling interactions and summarise what you find.
+[2026-06-15 22:34:34] [ANALYSIS] [INFO] TOOL CALL | semantic_log_search args={'query': 'slow or anomalous MCP sampling interactions'}
+[2026-06-15 22:34:34] [ANALYSIS] [DEBUG] TOOL RESULT | semantic_log_search | {
+  "query": "slow or anomalous MCP sampling interactions",
+  "matches": [
+    {
+      "score": 0.76,
+      "namespace": "logs.mcp.client.sampling",
+      "session_id": "7b9e9ef5-23ea-4d52-a87c-508da5
+[2026-06-15 22:34:34] [ANALYSIS] [INFO] TOOL CALL | analyze_tool_latency args={'window': '3'}
+[2026-06-15 22:34:34] [ANALYSIS] [DEBUG] TOOL RESULT | analyze_tool_latency | {
+  "metric": "tool_latency_moving_average",
+  "window": 3,
+  "interactions": 131,
+  "overall_avg_ms": 10749.84,
+  "per_tool": [
+    {
+      "tool_name": "None",
+      "count": 3,
+      "mean": 35776.
+[2026-06-15 22:34:34] [ANALYSIS] [DEBUG] AIMessage | The search results show several slow or anomalous MCP sampling interactions, with latency values ranging from 1167.89ms to 1363.57ms. The interactions are all related to the "create_message" tool and 
+[2026-06-15 22:34:34] [ANALYSIS] [INFO] Final analysis answer: The search results show several slow or anomalous MCP sampling interactions, with latency values ranging from 1167.89ms to 1363.57ms. The interactions are all related to the "create_message" tool and have a high similarity score, indicating that they are likely related to the same issue.
+
+The latenc
+[2026-06-15 22:34:34] [ANALYSIS] [INFO] ======================================================================
+[2026-06-15 22:34:34] [ANALYSIS] [INFO] Analysis query: 'Analyze tool latency trends and token consumption, and tell me which component is the heaviest.'
+[2026-06-15 22:34:34] [ANALYSIS] [INFO] analyze_tool_latency | window=5
+[2026-06-15 22:34:34] [ANALYSIS] [INFO] analyze_token_consumption
+[2026-06-15 22:34:34] [ANALYSIS] [INFO] analyze_tool_latency | chart saved → charts/latency_trends.png
+[2026-06-15 22:34:34] [ANALYSIS] [INFO] analyze_token_consumption | chart saved → charts/token_consumption.png
+[2026-06-15 22:34:35] [ANALYSIS] [DEBUG] HumanMessage | Analyze tool latency trends and token consumption, and tell me which component is the heaviest.
+[2026-06-15 22:34:35] [ANALYSIS] [INFO] TOOL CALL | analyze_tool_latency args={'save_path': 'charts/latency_trends.png', 'window': '5'}
+[2026-06-15 22:34:35] [ANALYSIS] [INFO] TOOL CALL | analyze_token_consumption args={'save_path': 'charts/token_consumption.png'}
+[2026-06-15 22:34:35] [ANALYSIS] [DEBUG] TOOL RESULT | analyze_tool_latency | {
+  "metric": "tool_latency_moving_average",
+  "window": 5,
+  "interactions": 131,
+  "overall_avg_ms": 10749.84,
+  "per_tool": [
+    {
+      "tool_name": "None",
+      "count": 3,
+      "mean": 35776.
+[2026-06-15 22:34:35] [ANALYSIS] [DEBUG] TOOL RESULT | analyze_token_consumption | {
+  "metric": "token_consumption",
+  "total_tokens": 43548,
+  "by_tool_type": [
+    {
+      "tool_name": "None",
+      "interaction_type": "tool_invocation",
+      "token_estimate": 36
+    },
+    {
+  
+[2026-06-15 22:34:35] [ANALYSIS] [DEBUG] AIMessage | The heaviest component is the "remote_reflection_tool" with a total token estimate of 14177. This is based on the analysis of tool latency trends and token consumption, which can be found in the gener
+[2026-06-15 22:34:35] [ANALYSIS] [INFO] Final analysis answer: The heaviest component is the "remote_reflection_tool" with a total token estimate of 14177. This is based on the analysis of tool latency trends and token consumption, which can be found in the generated charts at "charts/latency_trends.png" and "charts/token_consumption.png".
+[2026-06-15 22:34:35] [ANALYSIS] [INFO] ======================================================================
+[2026-06-15 22:34:35] [ANALYSIS] [INFO] Analysis query: 'Check the error frequency across components, then sync the knowledge graph to Neo4j and report exactly which nodes and edges were committed.'
+[2026-06-15 22:34:40] [ANALYSIS] [INFO] analyze_error_frequency
+[2026-06-15 22:34:40] [ANALYSIS] [INFO] sync_knowledge_graph | 131 log entries read
+[2026-06-15 22:34:40] [ANALYSIS] [INFO] analyze_error_frequency | chart saved → charts/error_frequency.png
+[2026-06-15 22:34:40] [ANALYSIS] [INFO] Connecting to Neo4j Aura → neo4j+s://e254bce7.databases.neo4j.io
+[2026-06-15 22:34:40] [ANALYSIS] [ERROR] Neo4j projection failed: Failed to DNS resolve address e254bce7.databases.neo4j.io:7687: [Errno 8] nodename nor servname provided, or not known
+[2026-06-15 22:34:51] [ANALYSIS] [INFO] analyze_error_frequency
+[2026-06-15 22:34:51] [ANALYSIS] [INFO] sync_knowledge_graph | 131 log entries read
+[2026-06-15 22:34:51] [ANALYSIS] [INFO] Connecting to Neo4j Aura → neo4j+s://e254bce7.databases.neo4j.io
+[2026-06-15 22:34:51] [ANALYSIS] [ERROR] Neo4j projection failed: Failed to DNS resolve address e254bce7.databases.neo4j.io:7687: [Errno 8] nodename nor servname provided, or not known
+[2026-06-15 22:34:51] [ANALYSIS] [INFO] analyze_error_frequency | chart saved → charts/error_frequency.png
+[2026-06-15 22:35:04] [ANALYSIS] [DEBUG] HumanMessage | Check the error frequency across components, then sync the knowledge graph to Neo4j and report exactly which nodes and edges were committed.
+[2026-06-15 22:35:04] [ANALYSIS] [INFO] TOOL CALL | analyze_error_frequency args={'save_path': 'charts/error_frequency.png'}
+[2026-06-15 22:35:04] [ANALYSIS] [INFO] TOOL CALL | sync_knowledge_graph args={}
+[2026-06-15 22:35:04] [ANALYSIS] [DEBUG] TOOL RESULT | analyze_error_frequency | {
+  "metric": "error_frequency",
+  "total_interactions": 131,
+  "error_count": 0,
+  "error_rate": 0.0,
+  "by_component": [
+    {
+      "component": "agent.planning.None",
+      "status": "success",
+  
+[2026-06-15 22:35:04] [ANALYSIS] [DEBUG] TOOL RESULT | sync_knowledge_graph | {
+  "status": "error",
+  "message": "Failed to DNS resolve address e254bce7.databases.neo4j.io:7687: [Errno 8] nodename nor servname provided, or not known"
+}
+[2026-06-15 22:35:04] [ANALYSIS] [INFO] TOOL CALL | analyze_error_frequency args={'save_path': 'charts/error_frequency.png'}
+[2026-06-15 22:35:04] [ANALYSIS] [INFO] TOOL CALL | sync_knowledge_graph args={}
+[2026-06-15 22:35:04] [ANALYSIS] [DEBUG] TOOL RESULT | analyze_error_frequency | {
+  "metric": "error_frequency",
+  "total_interactions": 131,
+  "error_count": 0,
+  "error_rate": 0.0,
+  "by_component": [
+    {
+      "component": "agent.planning.None",
+      "status": "success",
+  
+[2026-06-15 22:35:04] [ANALYSIS] [DEBUG] TOOL RESULT | sync_knowledge_graph | {
+  "status": "error",
+  "message": "Failed to DNS resolve address e254bce7.databases.neo4j.io:7687: [Errno 8] nodename nor servname provided, or not known"
+}
+[2026-06-15 22:35:04] [ANALYSIS] [DEBUG] AIMessage | An error frequency analysis was performed and the results are shown in the chart saved to charts/error_frequency.png. The analysis found 0 errors out of 131 interactions, resulting in an error rate of
+[2026-06-15 22:35:04] [ANALYSIS] [INFO] Final analysis answer: An error frequency analysis was performed and the results are shown in the chart saved to charts/error_frequency.png. The analysis found 0 errors out of 131 interactions, resulting in an error rate of 0.0. The breakdown of interactions by component is as follows: 
+- agent.planning.None: 3 successes
+
+[2026-06-15 22:35:04] [ANALYSIS] [INFO] Analysis session complete — logs → analysis_agent.log
+[2026-06-15 23:05:47] [ANALYSIS] [INFO] Building Log Analysis Agent | tools=['semantic_log_search', 'sync_knowledge_graph', 'analyze_tool_latency', 'analyze_token_consumption', 'analyze_error_frequency']
+[2026-06-15 23:15:22] [ANALYSIS] [INFO] analyze_tool_latency | window=10
+[2026-06-15 23:15:22] [ANALYSIS] [INFO] analyze_error_frequency
+[2026-06-15 23:15:23] [ANALYSIS] [INFO] Log store opened (read) → mcp_agent_log.db
+[2026-06-15 23:15:23] [ANALYSIS] [INFO] Log store opened (read) → mcp_agent_log.db
+[2026-06-15 23:15:23] [ANALYSIS] [INFO] Log store opened (read) → mcp_agent_log.db
+[2026-06-15 23:15:23] [ANALYSIS] [INFO] sync_knowledge_graph | 132 log entries read
+[2026-06-15 23:15:23] [ANALYSIS] [INFO] Connecting to Neo4j Aura → neo4j+s://e254bce7.databases.neo4j.io
+[2026-06-15 23:15:23] [ANALYSIS] [INFO] analyze_tool_latency | chart saved → charts/tool_latency.png
+[2026-06-15 23:15:23] [ANALYSIS] [INFO] analyze_error_frequency | chart saved → charts/error_frequency.png
+[2026-06-15 23:15:23] [ANALYSIS] [ERROR] Neo4j projection failed: Failed to DNS resolve address e254bce7.databases.neo4j.io:7687: [Errno 8] nodename nor servname provided, or not known
+[2026-06-15 23:17:59] [ANALYSIS] [INFO] semantic_log_search | query='Neo4j Aura DB connection errors' | limit=5
+[2026-06-15 23:17:59] [ANALYSIS] [INFO] Log store opened (read) → mcp_agent_log.db
+[2026-06-15 23:17:59] [ANALYSIS] [INFO] semantic_log_search | 5 hits returned
+[2026-06-15 23:19:15] [ANALYSIS] [INFO] Building Log Analysis Agent | tools=['semantic_log_search', 'sync_knowledge_graph', 'analyze_tool_latency', 'analyze_token_consumption', 'analyze_error_frequency']

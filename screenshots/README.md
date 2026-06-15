@@ -1,17 +1,36 @@
 # Stage 3 — Execution Screenshots
 
 Evidence of a successful end-to-end run of the distributed MCP system and the
-decoupled Log Analysis Agent. Each capture shows the executing machine's clock
-(top-right menu bar) to demonstrate chronological progress, per the task spec.
+decoupled **Streamlit** Log Analysis dashboard.
 
-Captured: **Sat 13 Jun 2026, 02:52–02:54**.
+> **Recapture checklist (addresses grading feedback).** The dashboard captures
+> must (a) show the **Streamlit dashboard itself** — not the VS Code preview
+> pane or a terminal — (b) capture the **full browser window UI** (sidebar +
+> chat + reasoning trace + chart), and (c) show the **executing machine's
+> clock**. The dashboard now renders a server-side **"Executing-machine time"**
+> banner at the top of the page, so a single full-window browser screenshot
+> carries the clock both in the app banner *and* in the OS menu bar.
 
-| # | File | Status | What it shows |
-|---|---|---|---|
-| 1 | `01-agent-client-trace.png` | ✅ committed | **agent_client** multi-turn ReAct trace (02:52) — `Step 3/4` (`tavily_search` → `remote_reflection_tool`) ending with `Agent session complete — vector logs → mcp_agent_log.db`. |
-| 2 | `02-mcp-server-protocol.png` | ✅ committed | **mcp_server** streamable-http protocol logs (02:53) — `POST /mcp 200 OK`, `ListToolsRequest`, the `reflection_tool` schema, MCP Sampling round-trips. |
-| 3 | `03-analysis-agent-neo4j-commit.png` | ✅ committed | **analysis-agent** terminal (02:54) — `Building Log Analysis Agent`, `analyze_*` tool calls, `Connecting to Neo4j Aura`, `Neo4j projection committed | nodes=85 edges=107`, `chart saved → charts/…`. |
-| 4 | `04-dashboard-latency-chart.png` | ✅ committed | **Streamlit dashboard** (02:33) — "Log store online", "Neo4j Aura configured", the rendered *Tool / Interaction Latency Trend* chart + the agent's diagnosis text. |
-| 5 | `05-neo4j-aura-graph.png` | ✅ committed | **Neo4j Aura console** — the projected property graph: `(:Session)`, `(:AgentAction)`, `(:MCPServerCall)` bound by `[:TRIGGERED]`, `[:ROUTED_TO]`, `[:DEPENDS_ON]` (85 nodes / 107 relationships). |
+## How to capture
 
-> All five captures are committed under `screenshots/`.
+1. Run all three processes (see the root `README.md`), then open the dashboard
+   at <http://localhost:8501> **in a real browser** (Chrome/Safari/Firefox) —
+   not the IDE's embedded preview.
+2. Ask one of the example questions (e.g. *"Analyze tool latency trends and show
+   me the chart."*) and let the agent finish so a chart + diagnosis render.
+3. Capture the **entire browser window**, including the OS menu-bar clock, so
+   both the in-app `🕒 Executing-machine time` banner and the OS clock are
+   visible in the same frame.
+
+## Required captures
+
+| # | File | What it must show |
+|---|---|---|
+| 1 | `01-dashboard-full-ui.png` | **Full Streamlit dashboard** in the browser — title, the `🕒 Executing-machine time` banner, sidebar system status, the agent reasoning trace, a rendered trend chart, and the diagnosis. **OS clock visible.** |
+| 2 | `02-dashboard-graph-sync.png` | Dashboard after a *"sync the knowledge graph to Neo4j"* query — the green `Neo4j sync committed — N nodes, M edges` notification with the node/edge breakdown. **OS clock visible.** |
+| 3 | `03-agent-client-trace.png` | `agent_client` terminal — the multi-turn tool-calling trace ending with `Agent session complete`. |
+| 4 | `04-mcp-server-protocol.png` | `mcp_server` terminal — `POST /mcp 200 OK`, `ListToolsRequest`, the `reflection_tool` schema, and MCP Sampling round-trips (including the ToT grading branches). |
+| 5 | `05-neo4j-aura-graph.png` | Neo4j Aura console — the projected property graph: `(:Session)-[:TRIGGERED]->(:AgentAction)-[:ROUTED_TO]->(:MCPServerCall)`. |
+
+> Items 1–2 are the primary deliverable (the dashboard run). Items 3–5 are the
+> supporting operational evidence.

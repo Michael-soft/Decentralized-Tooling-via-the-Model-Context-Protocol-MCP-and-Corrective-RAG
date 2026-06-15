@@ -383,7 +383,7 @@ def _run_async(coro) -> str:
 # ─────────────────────────────────────────────────────────────────────────────
 
 @tool
-def remote_reflection_tool(tool_input: str) -> str:
+def remote_reflection_tool(draft_answer: str, original_query: str) -> str:
     """
     Remote 2-stage Reflection via the MCP server (streamable-http).
 
@@ -394,10 +394,11 @@ def remote_reflection_tool(tool_input: str) -> str:
 
     WHEN TO USE:
       - After forming a preliminary answer from search or CRAG retrieval.
-      - Before writing Final Answer on any factual or high-stakes query.
+      - Before writing the final answer on any factual or high-stakes query.
 
-    Action Input (JSON string):
-        {"draft_answer": "<your current answer>", "original_query": "<user question>"}
+    Args:
+        draft_answer:   Your current best answer to be critiqued.
+        original_query: The user's original question (the truth anchor).
 
     Returns:
         corrected_answer string after critique and correction.
@@ -405,14 +406,11 @@ def remote_reflection_tool(tool_input: str) -> str:
     client_log.info("remote_reflection_tool invoked by agent")
 
     # ── Pydantic input validation ──────────────────────────────────────────────
-    try:
-        parsed    = json.loads(tool_input)
-        req       = ReflectionRequest(**parsed)
-        validated = req.to_tool_input()   # re-serialise clean JSON
-        client_log.debug(f"ReflectionRequest validated | query='{req.original_query[:60]}'")
-    except Exception as ve:
-        client_log.warning(f"ReflectionRequest validation failed ({ve}) — using raw input")
-        validated = tool_input
+    # Native tool-calling delivers typed args; ReflectionRequest validates them
+    # and re-serialises the single JSON string the server tool contract expects.
+    req       = ReflectionRequest(draft_answer=draft_answer, original_query=original_query)
+    validated = req.to_tool_input()
+    client_log.debug(f"ReflectionRequest validated | query='{req.original_query[:60]}'")
 
     # ── Remote tool call over MCP/HTTP ─────────────────────────────────────────
     raw_result = _run_async(
@@ -437,7 +435,8 @@ def remote_crag_tool(query: str) -> str:
     Reads knowledge://domain/{query} which triggers on the server:
     (1) Multi-query expansion — 3 semantic variants via MCP Sampling.
     (2) Hierarchical retrieval — L1 topic routing → L2/L3 chunk scoring.
-    (3) Localized ToT evaluation — Specificity, Completeness, Novelty paths.
+    (3) Tree-of-Thought grading — 3-branch LLM reasoning via MCP Sampling
+        (Specificity, Completeness, Novelty rated per branch then voted).
     (4) Tavily fallback — if avg ToT score < 0.6 or no chunks found.
     Response is validated with CRAGResponse before returning to the agent.
 

@@ -10,7 +10,7 @@ Exposes
   Resource → knowledge://domain/{query}: Hierarchical CRAG resource:
                                           multi-query expansion (Sampling) →
                                           hierarchical retrieval →
-                                          localized 3-path ToT scoring (rule-based) →
+                                          3-branch ToT grading (LLM via Sampling) →
                                           optional Tavily fallback.
 
 Run
@@ -207,7 +207,7 @@ async def reflection_tool(tool_input: str, ctx: Context) -> str:
 #  CRAG pipeline:
 #    (1) Multi-query expansion  → MCP Sampling (delegated to client LLM)
 #    (2) Hierarchical retrieval → keyword scoring across L1→L2→L3 chunks
-#    (3) ToT evaluation         → localized rule-based 3-path scoring (no LLM)
+#    (3) ToT evaluation         → LLM 3-branch reasoning via MCP Sampling
 #    (4) Tavily fallback        → triggered when avg ToT score < 0.6
 # ─────────────────────────────────────────────────────────────────────────────
 @mcp.resource("knowledge://domain/{query}")
@@ -221,9 +221,10 @@ async def crag_knowledge_resource(query: str, ctx: Context) -> str:
                                 via MCP Sampling (delegated to client's LLM).
     2. Hierarchical Retrieval : Searches L1 topic summaries → L2/L3 chunks
                                 using two-level keyword overlap scoring.
-    3. ToT Evaluation         : Localized 3-path scoring — Specificity,
-                                Completeness, Novelty — via pure keyword algebra
-                                (no LLM; "localized" per task spec).
+    3. ToT Evaluation         : 3-branch Tree-of-Thought grading performed by
+                                the client LLM via MCP Sampling — Specificity,
+                                Completeness, Novelty rated per branch then
+                                voted (server holds no LLM).
     4. Tavily Fallback        : Triggered when avg ToT score < 0.6 or
                                 no internal chunks found.
 
@@ -288,16 +289,17 @@ async def crag_knowledge_resource(query: str, ctx: Context) -> str:
     logger.info(f"Hierarchical retrieval: {len(retrieved_chunks)} unique chunks found")
     await ctx.info(f"Hierarchical retrieval: {len(retrieved_chunks)} unique chunks found")
 
-    # ── Step 3: Localized ToT Evaluation (rule-based, no LLM) ────────────────
-    # "Localized" in the task spec means running on the server without external
-    # LLM calls. We implement three keyword-algebra reasoning paths:
-    #   Path A — Specificity  : term precision (query terms ∩ chunk / query terms)
-    #   Path B — Completeness : coverage ratio (chunk terms covered by query)
-    #   Path C — Novelty      : IDF-weighted unique term overlap
-    logger.debug("CRAG Step 3: Localized ToT evaluation")
+    # ── Step 3: Tree-of-Thought Evaluation (LLM reasoning via MCP Sampling) ──
+    # ToT is an LLM reasoning paradigm: the client's LLM explores multiple
+    # independent reasoning branches over the same evidence, then deliberates
+    # and votes to converge on a grade. The server holds no LLM — every branch
+    # is sampled from the client's model. Three orthogonal dimensions are
+    # graded (specificity / completeness / novelty), each measuring a distinct
+    # property so lexical overlap is never scored twice.
+    logger.debug("CRAG Step 3: Tree-of-Thought evaluation (LLM via sampling)")
     await ctx.debug("CRAG Step 3 — Initiating ToT Evaluation on retrieved chunks")
 
-    tot_scores = _run_tot_evaluation_local(query, retrieved_chunks, ctx)
+    tot_scores = await _run_tot_evaluation(query, retrieved_chunks, ctx)
     avg_score  = sum(tot_scores.values()) / max(len(tot_scores), 1)
 
     await ctx.info(
@@ -365,64 +367,152 @@ def _tokenize(text: str) -> set[str]:
     return set(re.findall(r"\b\w+\b", text.lower()))
 
 
-def _run_tot_evaluation_local(
+def _clamp01(x: float) -> float:
+    """Clamp a value into the [0.0, 1.0] grading range."""
+    return max(0.0, min(1.0, x))
+
+
+async def _run_tot_evaluation(
     query: str,
     chunks: list[dict],
     ctx: Context,
+    n_branches: int = 3,
 ) -> dict[str, float]:
     """
-    Localized 3-path Tree-of-Thought relevance scoring — pure keyword algebra.
-    No LLM or external calls; fully self-contained on the server.
+    Tree-of-Thought relevance grading of the retrieved context.
 
-    Path A — Specificity  : Precision of query terms found in chunk content.
-    Path B — Completeness : Coverage of chunk unique terms against query.
-    Path C — Novelty      : IDF-weighted overlap rewards rare informative terms.
+    ToT is an LLM reasoning paradigm, so the reasoning is performed by the
+    client's LLM via MCP Sampling — the server holds no LLM or API keys. The
+    model explores ``n_branches`` INDEPENDENT reasoning paths over the same
+    evidence, scores each branch, then DELIBERATES and VOTES to converge on a
+    final grade (self-consistency over the thought tree).
 
-    Returns scores in [0.0, 1.0] per dimension.
+    The three dimensions are deliberately ORTHOGONAL so each measures a
+    distinct property — they do not all reduce to lexical overlap:
+      • Specificity  — how *precisely* the context targets the query intent.
+      • Completeness — whether *all* sub-aspects of the query are covered.
+      • Novelty      — how information-rich / non-generic the context is.
+
+    Falls back to a deterministic lexical heuristic only when sampling is
+    unavailable (e.g. the client LLM errors). Returns scores in [0.0, 1.0].
     """
     if not chunks:
         logger.warning("ToT evaluation: no chunks — returning zeros")
         return {"specificity": 0.0, "completeness": 0.0, "novelty": 0.0}
 
+    # Compact the evidence so the sampling prompt stays within the TPM budget.
+    evidence = "\n\n".join(
+        f"[CHUNK {i + 1} | {c.get('topic', '?')} | {c.get('level', '?')}]\n"
+        f"{c['content'][:500]}"
+        for i, c in enumerate(chunks[:5])
+    )
+
+    tot_system = (
+        "You are a retrieval-grading reasoner using the Tree-of-Thought method. "
+        f"Explore EXACTLY {n_branches} INDEPENDENT reasoning branches that each "
+        "judge how well the RETRIEVED CONTEXT answers the QUERY. For every branch "
+        "rate three ORTHOGONAL dimensions in [0,1] — judge MEANING, not word overlap:\n"
+        "  - specificity: how precisely and directly the context targets the exact "
+        "intent of the query (penalise generic or tangential text);\n"
+        "  - completeness: whether ALL sub-aspects needed to fully answer the query "
+        "are covered by the context (penalise partial coverage);\n"
+        "  - novelty: how information-rich and non-obvious the context is (penalise "
+        "content that merely restates the query or is boilerplate).\n"
+        "Then DELIBERATE across the branches and VOTE to converge on a final score "
+        "per dimension. Return ONLY raw JSON with this exact shape: "
+        '{"branches":[{"thought":"<one line>","specificity":<num>,'
+        '"completeness":<num>,"novelty":<num>}],'
+        '"final":{"specificity":<num>,"completeness":<num>,"novelty":<num>}}. '
+        "No markdown fences. No preamble."
+    )
+    tot_prompt = f"QUERY:\n{query}\n\nRETRIEVED CONTEXT:\n{evidence}"
+
+    try:
+        result = await ctx.session.create_message(
+            messages=[
+                SamplingMessage(
+                    role="user",
+                    content=TextContent(type="text", text=tot_prompt),
+                )
+            ],
+            system_prompt=tot_system,
+            max_tokens=600,
+        )
+        raw = (
+            result.content.text
+            if hasattr(result.content, "text")
+            else str(result.content)
+        )
+        parsed   = json.loads(_strip(raw))
+        branches = parsed.get("branches", []) or []
+        final    = parsed.get("final") or {}
+
+        def _vote(dim: str) -> float:
+            """Average a dimension across the explored branches (the ToT vote)."""
+            vals = [
+                float(b[dim])
+                for b in branches
+                if isinstance(b, dict) and isinstance(b.get(dim), (int, float))
+            ]
+            return sum(vals) / len(vals) if vals else 0.0
+
+        scores: dict[str, float] = {}
+        for dim in ("specificity", "completeness", "novelty"):
+            # Prefer the model's own deliberated `final`; otherwise vote ourselves.
+            v = final.get(dim)
+            scores[dim] = round(
+                _clamp01(float(v)) if isinstance(v, (int, float)) else _vote(dim), 3
+            )
+
+        await ctx.debug(
+            f"ToT explored {len(branches)} reasoning branches → voted {scores}"
+        )
+        logger.info(f"ToT (LLM/sampling) | branches={len(branches)} | scores={scores}")
+        return scores
+
+    except Exception as exc:
+        logger.warning(f"ToT sampling failed ({exc}) — deterministic fallback")
+        await ctx.debug(f"ToT sampling unavailable ({exc}); using deterministic fallback")
+        return _heuristic_relevance_fallback(query, chunks)
+
+
+def _heuristic_relevance_fallback(query: str, chunks: list[dict]) -> dict[str, float]:
+    """
+    Deterministic relevance grade used ONLY when LLM sampling is unavailable.
+
+    This is a lexical safety net, NOT Tree-of-Thought. Each dimension is
+    computed from a STRUCTURALLY DISTINCT statistic so the same overlap is
+    never scored twice:
+      • Specificity  — mean per-chunk precision: how focused each chunk is on
+                       the query (|q ∩ chunk| / |chunk|).
+      • Completeness — set-level coverage of the query across the UNION of all
+                       chunks (|q ∩ ⋃chunks| / |q|) — recall, not per-chunk.
+      • Novelty      — IDF-weighted overlap rewarding rare, informative terms.
+    """
     query_terms = _tokenize(query)
-    # Aggregate all chunk content for IDF approximation
     all_docs    = [_tokenize(c["content"]) for c in chunks]
-    N           = len(all_docs)
+    if not query_terms or not all_docs:
+        return {"specificity": 0.0, "completeness": 0.0, "novelty": 0.0}
+    N = len(all_docs)
 
-    # ── Path A: Specificity ────────────────────────────────────────────────────
-    specificity_scores = []
-    for chunk in chunks:
-        chunk_terms = _tokenize(chunk["content"])
-        if not query_terms:
-            specificity_scores.append(0.0)
-        else:
-            hit = len(query_terms & chunk_terms) / len(query_terms)
-            specificity_scores.append(hit)
-    specificity = sum(specificity_scores) / len(specificity_scores)
+    # Specificity — mean per-chunk precision (focus of each chunk on the query).
+    precisions  = [len(query_terms & ct) / len(ct) if ct else 0.0 for ct in all_docs]
+    specificity = _clamp01(sum(precisions) / len(precisions) * 5)  # scale sparse hits
 
-    # ── Path B: Completeness ───────────────────────────────────────────────────
-    completeness_scores = []
-    for chunk in chunks:
-        chunk_terms = _tokenize(chunk["content"])
-        if not chunk_terms:
-            completeness_scores.append(0.0)
-        else:
-            cov = len(query_terms & chunk_terms) / len(chunk_terms)
-            completeness_scores.append(min(cov * 5, 1.0))   # scale up sparse hits
-    completeness = sum(completeness_scores) / len(completeness_scores)
+    # Completeness — collective query coverage across the UNION of chunks (recall).
+    union_terms  = set().union(*all_docs)
+    completeness = len(query_terms & union_terms) / len(query_terms)
 
-    # ── Path C: Novelty (IDF-weighted) ────────────────────────────────────────
+    # Novelty — IDF-weighted overlap rewarding rare, informative shared terms.
     novelty_scores = []
-    for i, chunk in enumerate(chunks):
-        chunk_terms = _tokenize(chunk["content"])
-        overlap     = query_terms & chunk_terms
+    for ct in all_docs:
+        overlap = query_terms & ct
         if not overlap:
             novelty_scores.append(0.0)
             continue
-        idf_sum = 0.0
-        for term in overlap:
-            df      = sum(1 for doc in all_docs if term in doc)
-            idf_sum += math.log((N + 1) / (df + 1))
+        idf_sum = sum(
+            math.log((N + 1) / (sum(1 for d in all_docs if t in d) + 1)) for t in overlap
+        )
         novelty_scores.append(min(idf_sum / (len(overlap) * 3), 1.0))
     novelty = sum(novelty_scores) / len(novelty_scores)
 

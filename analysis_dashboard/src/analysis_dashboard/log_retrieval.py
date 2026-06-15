@@ -19,7 +19,7 @@ from .store_reader import LOG_ROOT, get_reader
 
 
 @tool
-def semantic_log_search(query: str, limit: int = 6) -> str:
+def semantic_log_search(query: str, limit: int | str = 6) -> str:
     """
     Semantic vector search over the persisted MCP interaction logs.
 
@@ -35,9 +35,14 @@ def semantic_log_search(query: str, limit: int = 6) -> str:
         JSON string: a ranked list of matching log entries with similarity
         score, namespace, interaction type, component, latency, and status.
     """
-    analysis_log.info(f"semantic_log_search | query={query!r} | limit={limit}")
+    # String-tolerant: some tool-calling LLMs emit numeric args as strings.
+    try:
+        limit_int = max(1, int(limit))
+    except (TypeError, ValueError):
+        limit_int = 6
+    analysis_log.info(f"semantic_log_search | query={query!r} | limit={limit_int}")
     reader = get_reader()
-    hits = reader.semantic_search(query, namespace_prefix=(LOG_ROOT,), limit=limit)
+    hits = reader.semantic_search(query, namespace_prefix=(LOG_ROOT,), limit=limit_int)
 
     summary = []
     for h in hits:

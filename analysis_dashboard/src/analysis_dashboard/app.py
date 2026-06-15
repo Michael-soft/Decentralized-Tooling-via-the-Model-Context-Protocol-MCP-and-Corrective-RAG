@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import json
 import os
+from datetime import datetime
 from pathlib import Path
 
 import streamlit as st
@@ -111,6 +112,14 @@ def _run_and_render(agent, query: str) -> None:
 # ─────────────────────────────────────────────────────────────────────────────
 st.title("🔭 MCP Observability Control Plane")
 st.caption("Stage 3 — decoupled Log Analysis Agent over the hierarchical vector log store")
+
+# Executing-machine clock — rendered server-side so a single dashboard
+# screenshot carries its own timestamp evidence (in addition to the OS clock).
+_now = datetime.now().astimezone()
+st.info(
+    f"🕒 **Executing-machine time:** {_now.strftime('%a %d %b %Y, %H:%M:%S %Z')}  "
+    f"·  run rendered live by Streamlit"
+)
 
 with st.sidebar:
     st.header("System status")

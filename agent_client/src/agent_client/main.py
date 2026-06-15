@@ -3,11 +3,15 @@ main.py
 ───────
 Stage 2 — AI Agent (MCP Client) entrypoint.
 
-Initialises a LangChain ReAct agent (create_react_agent factory) equipped
-with three tools:
+Initialises a LangChain agent via the modern ``create_agent`` factory
+(LangChain 1.x / LangGraph) equipped with three tools:
   1. tavily_search               — real-world web grounding (local Tavily).
   2. remote_crag_tool            — hierarchical CRAG resource over MCP HTTP.
   3. remote_reflection_tool      — 2-stage critique + correction over MCP HTTP.
+
+The agent uses native tool-calling (not text-format ReAct) — the same
+``create_agent`` factory used by the decoupled analysis dashboard, so both
+processes share one agent-construction idiom.
 
 All MCP communication uses streamable-http transport. The sampling handler
 in mcp_client.py ensures the server's Reflection tool delegates LLM calls
@@ -26,11 +30,9 @@ import os
 import time
 import uuid
 
-from langchain_classic.agents import AgentExecutor, create_react_agent
-from langchain_core.prompts import PromptTemplate
+from langchain.agents import create_agent
 from langchain_groq import ChatGroq
 from langchain_tavily import TavilySearch
-from langsmith import Client as LangSmithClient
 
 from .log_store import LogEntry, estimate_tokens, get_log_store
 from .logger import client_log
@@ -51,9 +53,9 @@ except Exception:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _build_llm() -> ChatGroq:
-    """Fast, deterministic outer-loop LLM for the ReAct Thought/Action cycle."""
+    """Fast, deterministic tool-calling LLM for the agent's reasoning loop."""
     return ChatGroq(
-        model="llama-3.1-8b-instant",
+        model="llama-3.3-70b-versatile",
         temperature=0,
         max_tokens=1024,
     )
@@ -67,10 +69,10 @@ def _build_tools() -> list:
     """
     Assemble the agent's tool registry.
 
-    Tool order signals priority to the ReAct agent:
+    Tool order signals priority to the agent:
       1. tavily_search          — gather real-world facts first.
       2. remote_crag_tool       — domain knowledge with ToT grading.
-      3. remote_reflection_tool — verify draft before Final Answer.
+      3. remote_reflection_tool — verify draft before the final answer.
     """
     tavily = TavilySearch(
         max_results=2,
@@ -89,45 +91,35 @@ def _build_tools() -> list:
 #  Agent
 # ─────────────────────────────────────────────────────────────────────────────
 
-_META_DIRECTIVE = (
-    "You are a Thinking Agent connected to a remote MCP server. "
-    "For complex queries follow this order: "
-    "(1) tavily_search — gather live facts, "
-    "(2) remote_crag_tool — retrieve graded domain knowledge, "
-    "(3) remote_reflection_tool — verify your draft before answering. "
-    "After remote_reflection_tool returns, write Final Answer immediately."
+_SYSTEM_PROMPT = (
+    "You are a Thinking Agent connected to a remote MCP server, equipped with "
+    "three tools. Reason step by step and call tools to ground every answer.\n\n"
+    "For complex queries follow this order:\n"
+    "  1. tavily_search       — gather live, real-world facts.\n"
+    "  2. remote_crag_tool    — retrieve graded domain knowledge.\n"
+    "  3. remote_reflection_tool — verify and correct your draft before answering.\n\n"
+    "Call remote_reflection_tool once you have a draft, passing your draft as "
+    "`draft_answer` and the user's question as `original_query`. After it returns, "
+    "write your final answer immediately and concisely."
 )
 
 
-def build_agent_executor() -> AgentExecutor:
+def build_agent():
     """
-    Construct and return a ready-to-run AgentExecutor.
+    Construct and return a ready-to-run agent.
 
-    Uses LangChain's create_react_agent factory with the hwchase17/react
-    base prompt augmented by the meta-cognitive directive above.
+    Uses LangChain's modern ``create_agent`` factory (LangGraph runtime) with
+    native tool-calling. The system prompt encodes the meta-cognitive tool
+    ordering above. Returns a compiled graph whose ``.invoke`` takes
+    ``{"messages": [...]}`` and returns ``{"messages": [...]}``.
     """
     llm   = _build_llm()
     tools = _build_tools()
 
-    base_prompt: PromptTemplate = LangSmithClient().pull_prompt(
-        "hwchase17/react",
-        dangerously_pull_public_prompt=True,
-    )
-    augmented_template = base_prompt.template.replace(
-        "Begin!", f"{_META_DIRECTIVE}\n\nBegin!"
-    )
-    react_prompt = PromptTemplate.from_template(augmented_template)
-
-    agent = create_react_agent(llm=llm, tools=tools, prompt=react_prompt)
-
-    return AgentExecutor(
-        agent                     = agent,
-        tools                     = tools,
-        verbose                   = True,
-        handle_parsing_errors     = True,
-        max_iterations            = 12,
-        max_execution_time        = 180,
-        return_intermediate_steps = True,
+    return create_agent(
+        model=llm,
+        tools=tools,
+        system_prompt=_SYSTEM_PROMPT,
     )
 
 
@@ -135,16 +127,39 @@ def build_agent_executor() -> AgentExecutor:
 #  Execution helpers
 # ─────────────────────────────────────────────────────────────────────────────
 
-def run_query(executor: AgentExecutor, query: str) -> dict:
+def _extract_tool_steps(messages: list) -> list[tuple[str, Any, str]]:
+    """
+    Flatten a create_agent message list into ordered (tool, args, observation)
+    triples — the modern equivalent of AgentExecutor's intermediate_steps.
+
+    Tool calls live on AIMessage.tool_calls; their results arrive as
+    ToolMessage objects keyed by tool_call_id.
+    """
+    results_by_id: dict[str, str] = {}
+    for msg in messages:
+        if type(msg).__name__ == "ToolMessage":
+            results_by_id[getattr(msg, "tool_call_id", "")] = str(getattr(msg, "content", ""))
+
+    steps: list[tuple[str, Any, str]] = []
+    for msg in messages:
+        for tc in getattr(msg, "tool_calls", None) or []:
+            name = tc.get("name", "unknown")
+            args = tc.get("args", {})
+            observation = results_by_id.get(tc.get("id", ""), "")
+            steps.append((name, args, observation))
+    return steps
+
+
+def run_query(agent, query: str) -> dict:
     """
     Invoke the agent on a single query and emit structured log output.
 
     Args:
-        executor : Configured AgentExecutor instance.
-        query    : Natural language question from the user.
+        agent : Compiled create_agent graph.
+        query : Natural language question from the user.
 
     Returns:
-        The full result dict including intermediate_steps.
+        The full result dict including the message list.
     """
     client_log.info(f"Query submitted to agent: {query!r}")
     store = get_log_store()
@@ -164,21 +179,23 @@ def run_query(executor: AgentExecutor, query: str) -> dict:
     )
 
     start  = time.perf_counter()
-    result = executor.invoke({"input": query})
+    result = agent.invoke({"messages": [{"role": "user", "content": query}]})
     total_ms = (time.perf_counter() - start) * 1000.0
 
+    messages = result.get("messages", [])
+    final_answer = messages[-1].content if messages else ""
     client_log.info("Agent completed execution")
-    client_log.info(f"Final Answer: {result.get('output', '')}")
+    client_log.info(f"Final Answer: {final_answer}")
 
-    # Log a structured trace of every step + persist each as an AgentAction.
-    steps = result.get("intermediate_steps", [])
-    client_log.info(f"Total intermediate steps: {len(steps)}")
+    # Log a structured trace of every tool call + persist each as an AgentAction.
+    steps = _extract_tool_steps(messages)
+    client_log.info(f"Total tool calls: {len(steps)}")
     per_step_ms = total_ms / max(len(steps), 1)
-    for i, (action, observation) in enumerate(steps, 1):
+    for i, (tool_name, args, observation) in enumerate(steps, 1):
         obs_preview = str(observation)[:200]
         client_log.debug(
-            f"Step {i} | tool={action.tool} | "
-            f"input={str(action.tool_input)[:120]} | "
+            f"Step {i} | tool={tool_name} | "
+            f"input={str(args)[:120]} | "
             f"obs={obs_preview}"
         )
         # Persist the agent's decision to invoke this tool (graph: AgentAction).
@@ -187,17 +204,17 @@ def run_query(executor: AgentExecutor, query: str) -> dict:
                 session_id=get_session_id(),
                 mcp_interaction_type="tool_invocation",
                 content=(
-                    f"AGENT ACTION step={i} tool={action.tool}\n"
-                    f"INPUT: {str(action.tool_input)[:400]}\n"
+                    f"AGENT ACTION step={i} tool={tool_name}\n"
+                    f"INPUT: {str(args)[:400]}\n"
                     f"OBSERVATION: {str(observation)[:800]}"
                 ),
-                component=f"agent.planning.{action.tool}",
-                tool_name=action.tool,
-                target=action.tool,
+                component=f"agent.planning.{tool_name}",
+                tool_name=tool_name,
+                target=tool_name,
                 latency_ms=round(per_step_ms, 2),
                 token_estimate=estimate_tokens(str(observation)),
             ),
-            store.namespace("agent", "planning", action.tool),
+            store.namespace("agent", "planning", tool_name),
             f"{int(time.time() * 1000)}-{i}-{uuid.uuid4().hex[:6]}",
         )
 
@@ -205,28 +222,29 @@ def run_query(executor: AgentExecutor, query: str) -> dict:
 
 
 def print_trace(result: dict) -> None:
-    """Pretty-print the ReAct trace to stdout for submission evidence."""
+    """Pretty-print the agent trace to stdout for submission evidence."""
+    messages = result.get("messages", [])
+    final_answer = messages[-1].content if messages else ""
+
     sep = "═" * 70
     print(f"\n{sep}")
     print("                      FINAL ANSWER")
     print(sep)
-    print(result.get("output", ""))
+    print(final_answer)
     print(sep)
 
+    steps = _extract_tool_steps(messages)
     print(f"\n{sep}")
-    print("                  INTERMEDIATE STEPS TRACE")
+    print("                  TOOL-CALL TRACE")
     print(sep)
-    for i, (action, observation) in enumerate(
-        result.get("intermediate_steps", []), 1
-    ):
+    for i, (tool_name, args, observation) in enumerate(steps, 1):
         print(f"\n─── Step {i} {'─'*50}")
-        print(f"  TOOL  : {action.tool}")
-        inp = action.tool_input
-        print(f"  INPUT : {json.dumps(inp, indent=2) if isinstance(inp, dict) else str(inp)[:300]}")
+        print(f"  TOOL  : {tool_name}")
+        print(f"  INPUT : {json.dumps(args, indent=2) if isinstance(args, dict) else str(args)[:300]}")
         obs = str(observation)
         print(f"  OBS   : {obs[:600]}{'...' if len(obs) > 600 else ''}")
     print(f"\n{sep}")
-    print(f"Total steps executed: {len(result.get('intermediate_steps', []))}")
+    print(f"Total tool calls executed: {len(steps)}")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -267,7 +285,7 @@ def main() -> None:
     # Warm the store (and trigger the FastEmbed model load) up front.
     get_log_store()
 
-    executor = build_agent_executor()
+    agent = build_agent()
 
     multi = os.environ.get("MCP_MULTI_TURN", "1") not in ("0", "false", "False")
     queries = DEMO_QUERIES if multi else [DEMO_QUERY]
@@ -275,7 +293,7 @@ def main() -> None:
     for turn, query in enumerate(queries, 1):
         client_log.info("─" * 70)
         client_log.info(f"TURN {turn}/{len(queries)} | session={get_session_id()}")
-        result = run_query(executor, query)
+        result = run_query(agent, query)
         print_trace(result)
 
     client_log.info("Agent session complete — flat logs → mcp_agent_system.log, "
