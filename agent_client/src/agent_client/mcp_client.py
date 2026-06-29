@@ -34,12 +34,23 @@ from urllib.parse import quote
 from fastmcp import Client
 from fastmcp.client.logging import LogMessage
 from fastmcp.client.sampling import SamplingMessage, SamplingParams
+from langchain_core.runnables import Runnable
 from langchain_core.tools import tool
 from mcp.shared.context import RequestContext
 from pydantic import BaseModel, Field
 
 from .log_store import LogEntry, estimate_tokens, get_log_store
 from .logger import client_log, server_log
+from .resilience import (
+    EXCEPTION_KEY,
+    ToolApplicationError,
+    build_resilient_llm,
+    build_resilient_tool_chain,
+    llm_reinjection,
+    maybe_inject_transient,
+    record_fallback,
+    should_inject_application_error,
+)
 from .session import get_session_id
 
 
@@ -125,16 +136,23 @@ _sampling_llm_instance = None
 
 
 def _get_sampling_llm():
-    """Return the singleton Groq LLM used exclusively for sampling requests."""
+    """
+    Return the singleton *resilient* Groq LLM used for sampling requests.
+
+    Stage 4: the client's primary LLM execution surface (the server delegates
+    every LLM call here via MCP Sampling) is wrapped with LangChain's native
+    ``RunnableWithRetry`` — exponential backoff + jitter, bounded by
+    ``MAX_RETR_ATTEMPTS`` — so transient Groq faults (429 / 5xx / connection)
+    are absorbed before they can bubble up and break a sampling round-trip.
+    """
     global _sampling_llm_instance
     if _sampling_llm_instance is None:
-        from langchain_groq import ChatGroq
-        _sampling_llm_instance = ChatGroq(
-            model       = "llama-3.3-70b-versatile",
-            temperature = 0.3,
-            max_tokens  = 512,
+        _sampling_llm_instance = build_resilient_llm(
+            model="llama-3.3-70b-versatile", temperature=0.3, max_tokens=512
         )
-        client_log.info("Sampling LLM initialised: llama-3.3-70b-versatile")
+        client_log.info(
+            "Resilient sampling LLM initialised (RunnableWithRetry): llama-3.3-70b-versatile"
+        )
     return _sampling_llm_instance
 
 
@@ -382,15 +400,151 @@ def _run_async(coro) -> str:
 #  LangChain @tool wrappers — Pydantic used for input validation + output parsing
 # ─────────────────────────────────────────────────────────────────────────────
 
+# ── remote_reflection_tool — resilient primary + self-healing fallback ───────
+def _reflection_primary(payload: dict[str, Any]) -> str:
+    """
+    Primary reflection runnable. Raises a transient exception on an injected
+    infrastructure fault (→ RunnableWithRetry) or ``ToolApplicationError`` on an
+    application fault (→ self-healing fallback).
+    """
+    draft_answer   = payload.get("draft_answer", "")
+    original_query = payload.get("original_query", "")
+    healed         = bool(payload.get("_healed", False))
+
+    if payload.get("_force_fail"):
+        raise ToolApplicationError(
+            "[injected] unrecoverable reflection fault (catastrophic-fallback demo)"
+        )
+    maybe_inject_transient("remote_reflection_tool")
+
+    # Pydantic input validation → single JSON string the server contract expects.
+    req       = ReflectionRequest(draft_answer=draft_answer, original_query=original_query)
+    validated = req.to_tool_input()
+    client_log.debug(f"ReflectionRequest validated | query='{req.original_query[:60]}'")
+
+    raw_result = _run_async(_call_server_tool("reflection_tool", {"tool_input": validated}))
+
+    if should_inject_application_error("remote_reflection_tool", healed):
+        raise ToolApplicationError(
+            "[injected] reflection_tool returned a malformed payload schema"
+        )
+
+    response = ReflectionResponse.parse_tool_output(raw_result)
+    client_log.info(f"ReflectionResponse received | is_sufficient={response.is_sufficient}")
+    return response.corrected_answer
+
+
+def _reflection_self_heal(payload: dict[str, Any]) -> str:
+    """Self-healing fallback: best-effort LLM reinjection, then re-drive primary."""
+    err = payload.get(EXCEPTION_KEY)
+    record_fallback("remote_reflection_tool", f"{type(err).__name__}: {err}")
+    # LLM reinjection is the *reasoning* step and is best-effort: deterministic
+    # re-drive is the actual recovery, so a flaky/unavailable LLM never blocks it.
+    try:
+        llm_reinjection(
+            component="remote_reflection_tool",
+            system_directive=(
+                "You are a self-healing controller for a failed reflection tool call. "
+                "Acknowledge the error and state the corrected retry strategy in one line."
+            ),
+            failure_context=(
+                f"Tool 'remote_reflection_tool' failed with: {err}. "
+                f"Original query: {payload.get('original_query', '')[:200]}. "
+                "Re-issue the call with a validated payload."
+            ),
+        )
+    except Exception as heal_exc:
+        client_log.warning(f"reflection self-heal LLM reinjection unavailable: {heal_exc}")
+    return _reflection_primary({**payload, "_healed": True, EXCEPTION_KEY: None})
+
+
+# ── remote_crag_tool — resilient primary + self-healing fallback ─────────────
+def _crag_primary(payload: dict[str, Any]) -> str:
+    """Primary CRAG retrieval runnable (transient-faulting / app-faulting)."""
+    query  = payload.get("query", "")
+    healed = bool(payload.get("_healed", False))
+
+    if payload.get("_force_fail"):
+        raise ToolApplicationError(
+            "[injected] unrecoverable CRAG fault (catastrophic-fallback demo)"
+        )
+    maybe_inject_transient("remote_crag_tool")
+
+    encoded = quote(query, safe="")
+    uri     = f"knowledge://domain/{encoded}"
+    raw     = _run_async(_read_server_resource(uri))
+
+    if should_inject_application_error("remote_crag_tool", healed):
+        raise ToolApplicationError(
+            "[injected] CRAG resource returned an invalid payload schema"
+        )
+
+    crag = CRAGResponse.parse_resource_output(raw)
+    client_log.info(
+        f"CRAGResponse validated | fallback_used={crag.fallback_used} "
+        f"| avg_tot={crag.avg_tot_score} | queries={len(crag.expanded_queries)}"
+    )
+    return crag.combined_context
+
+
+def _crag_self_heal(payload: dict[str, Any]) -> str:
+    """Self-healing fallback: best-effort LLM reinjection, then re-drive primary."""
+    err = payload.get(EXCEPTION_KEY)
+    record_fallback("remote_crag_tool", f"{type(err).__name__}: {err}")
+    try:
+        llm_reinjection(
+            component="remote_crag_tool",
+            system_directive=(
+                "You are a self-healing controller for a failed knowledge-retrieval call. "
+                "Acknowledge the error and state the corrected retry strategy in one line."
+            ),
+            failure_context=(
+                f"Tool 'remote_crag_tool' failed with: {err}. "
+                f"Original query: {payload.get('query', '')[:200]}. "
+                "Re-issue the retrieval with a validated request."
+            ),
+        )
+    except Exception as heal_exc:
+        client_log.warning(f"crag self-heal LLM reinjection unavailable: {heal_exc}")
+    return _crag_primary({**payload, "_healed": True, EXCEPTION_KEY: None})
+
+
+# ── Lazily-built resilient chains (primary.with_retry → fallbacks) ───────────
+_reflection_chain: Runnable | None = None
+_crag_chain: Runnable | None = None
+
+
+def get_reflection_chain() -> Runnable:
+    global _reflection_chain
+    if _reflection_chain is None:
+        _reflection_chain = build_resilient_tool_chain(
+            name="remote_reflection_tool",
+            primary_fn=_reflection_primary,
+            self_heal_fn=_reflection_self_heal,
+        )
+    return _reflection_chain
+
+
+def get_crag_chain() -> Runnable:
+    global _crag_chain
+    if _crag_chain is None:
+        _crag_chain = build_resilient_tool_chain(
+            name="remote_crag_tool",
+            primary_fn=_crag_primary,
+            self_heal_fn=_crag_self_heal,
+        )
+    return _crag_chain
+
+
 @tool
 def remote_reflection_tool(draft_answer: str, original_query: str) -> str:
     """
-    Remote 2-stage Reflection via the MCP server (streamable-http).
+    Remote 2-stage Reflection via the MCP server (streamable-http), executed
+    through the Stage 4 resilient chain (RunnableWithRetry → self-healing
+    fallback → hardcoded absolute fallback).
 
-    Validates input with ReflectionRequest, calls the server reflection_tool,
-    then parses and validates the response with ReflectionResponse.
-    The server delegates both LLM calls back to this client's Groq model
-    via MCP Sampling — the server holds no API keys.
+    The server delegates both LLM calls back to this client's Groq model via
+    MCP Sampling — the server holds no API keys.
 
     WHEN TO USE:
       - After forming a preliminary answer from search or CRAG retrieval.
@@ -401,36 +555,21 @@ def remote_reflection_tool(draft_answer: str, original_query: str) -> str:
         original_query: The user's original question (the truth anchor).
 
     Returns:
-        corrected_answer string after critique and correction.
+        corrected_answer string after critique and correction (or a
+        deterministic degraded payload if every resilience layer is exhausted).
     """
     client_log.info("remote_reflection_tool invoked by agent")
-
-    # ── Pydantic input validation ──────────────────────────────────────────────
-    # Native tool-calling delivers typed args; ReflectionRequest validates them
-    # and re-serialises the single JSON string the server tool contract expects.
-    req       = ReflectionRequest(draft_answer=draft_answer, original_query=original_query)
-    validated = req.to_tool_input()
-    client_log.debug(f"ReflectionRequest validated | query='{req.original_query[:60]}'")
-
-    # ── Remote tool call over MCP/HTTP ─────────────────────────────────────────
-    raw_result = _run_async(
-        _call_server_tool("reflection_tool", {"tool_input": validated})
+    return get_reflection_chain().invoke(
+        {"draft_answer": draft_answer, "original_query": original_query}
     )
-
-    # ── Pydantic output validation ─────────────────────────────────────────────
-    response = ReflectionResponse.parse_tool_output(raw_result)
-    client_log.info(
-        f"ReflectionResponse received | is_sufficient={response.is_sufficient}"
-    )
-
-    # Return the corrected answer as plain text for the ReAct agent
-    return response.corrected_answer
 
 
 @tool
 def remote_crag_tool(query: str) -> str:
     """
-    Hierarchical CRAG knowledge retrieval via the MCP server resource.
+    Hierarchical CRAG knowledge retrieval via the MCP server resource, executed
+    through the Stage 4 resilient chain (RunnableWithRetry → self-healing
+    fallback → hardcoded absolute fallback).
 
     Reads knowledge://domain/{query} which triggers on the server:
     (1) Multi-query expansion — 3 semantic variants via MCP Sampling.
@@ -438,7 +577,6 @@ def remote_crag_tool(query: str) -> str:
     (3) Tree-of-Thought grading — 3-branch LLM reasoning via MCP Sampling
         (Specificity, Completeness, Novelty rated per branch then voted).
     (4) Tavily fallback — if avg ToT score < 0.6 or no chunks found.
-    Response is validated with CRAGResponse before returning to the agent.
 
     WHEN TO USE:
       - Domain questions on: agentic AI, MCP, RAG/CRAG, LangChain,
@@ -448,19 +586,8 @@ def remote_crag_tool(query: str) -> str:
         query: Natural language question about the knowledge domain.
 
     Returns:
-        combined_context string (internal chunks + optional web results).
+        combined_context string (internal chunks + optional web results), or a
+        deterministic degraded payload if every resilience layer is exhausted.
     """
     client_log.info(f"remote_crag_tool invoked | query='{query}'")
-
-    encoded = quote(query, safe="")
-    uri     = f"knowledge://domain/{encoded}"
-    raw     = _run_async(_read_server_resource(uri))
-
-    # ── Pydantic output validation ─────────────────────────────────────────────
-    crag = CRAGResponse.parse_resource_output(raw)
-    client_log.info(
-        f"CRAGResponse validated | fallback_used={crag.fallback_used} "
-        f"| avg_tot={crag.avg_tot_score} | queries={len(crag.expanded_queries)}"
-    )
-
-    return crag.combined_context
+    return get_crag_chain().invoke({"query": query})

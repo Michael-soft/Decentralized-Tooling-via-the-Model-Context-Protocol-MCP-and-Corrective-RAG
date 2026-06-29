@@ -1,0 +1,160 @@
+{
+  "schema": "explainability_audit_report/v1",
+  "generated_at": "2026-06-29T04:18:55.754124+00:00",
+  "session_id": "bf42d439-8f73-45fd-82b6-60057f7f44de",
+  "target": {
+    "key": "1782157629140-2f4743f4",
+    "namespace": "logs.resilience.remote_crag_tool",
+    "component": "resilience.remote_crag_tool",
+    "tool_name": "retry_attempt",
+    "status": "error",
+    "error": null,
+    "content_preview": "RETRY ATTEMPT (remote_crag_tool): injected transient fault (HTTP 429-like) \u2014 retrying"
+  },
+  "failure_mode": "resilience.remote_crag_tool / retry_attempt [error]: anomalous trace",
+  "graph_context": {
+    "source": "neo4j_aura",
+    "session_present": true,
+    "counts": {
+      "agent_actions": 12,
+      "server_calls": 0,
+      "sampling_dependencies": 1
+    },
+    "matched_agent_actions": [
+      {
+        "component": "resilience.remote_reflection_tool",
+        "interaction_type": "tool_invocation",
+        "key": "1782157645153-78631306",
+        "latency_ms": 0.0,
+        "name": "hardcoded_fallback",
+        "status": "error"
+      },
+      {
+        "component": "resilience.remote_reflection_tool",
+        "interaction_type": "tool_invocation",
+        "key": "1782157644297-a8118bc4",
+        "latency_ms": 0.0,
+        "name": "fallback_activation",
+        "status": "error"
+      },
+      {
+        "component": "resilience.remote_reflection_tool",
+        "interaction_type": "tool_invocation",
+        "key": "1782157644341-ded149ed",
+        "latency_ms": 0.0,
+        "name": "self_healing_iteration",
+        "status": "error"
+      },
+      {
+        "component": "mcp.client.sampling",
+        "interaction_type": "sampling_request",
+        "key": "1782157643056-8ea7ae15",
+        "latency_ms": 1098.77,
+        "name": "create_message",
+        "status": "error"
+      },
+      {
+        "component": "resilience.remote_crag_tool",
+        "interaction_type": "tool_invocation",
+        "key": "1782157640979-96861812",
+        "latency_ms": 0.0,
+        "name": "fallback_activation",
+        "status": "error"
+      },
+      {
+        "component": "resilience.remote_crag_tool",
+        "interaction_type": "tool_invocation",
+        "key": "1782157641022-04550087",
+        "latency_ms": 0.0,
+        "name": "self_healing_iteration",
+        "status": "error"
+      },
+      {
+        "component": "mcp.client.sampling",
+        "interaction_type": "sampling_request",
+        "key": "1782157637200-d9eb8c46",
+        "latency_ms": 1066.44,
+        "name": "create_message",
+        "status": "error"
+      },
+      {
+        "component": "mcp.client.sampling",
+        "interaction_type": "sampling_request",
+        "key": "1782157632246-699a9af7",
+        "latency_ms": 1309.38,
+        "name": "create_message",
+        "status": "error"
+      }
+    ],
+    "matched_server_calls": [],
+    "context_text": "\u2500\u2500 GRAPH-RELATIONAL CONTEXT (subgraph hydration) \u2500\u2500\nsource: neo4j_aura  session: bf42d439-8f73-45fd-82b6-60057f7f44de\nparent (:Session) present: True\nadjacent (:AgentAction) states: 12\nsubsequent (:MCPServerCall) executions: 0\n(:DEPENDS_ON) sampling delegations: 1\n  \u2022 AgentAction hardcoded_fallback [resilience.remote_reflection_tool] status=error latency=0.0ms\n  \u2022 AgentAction fallback_activation [resilience.remote_reflection_tool] status=error latency=0.0ms\n  \u2022 AgentAction self_healing_iteration [resilience.remote_reflection_tool] status=error latency=0.0ms\n  \u2022 AgentAction create_message [mcp.client.sampling] status=error latency=1098.77ms\n  \u2022 AgentAction fallback_activation [resilience.remote_crag_tool] status=error latency=0.0ms\n  \u2022 AgentAction self_healing_iteration [resilience.remote_crag_tool] status=error latency=0.0ms\n  \u2022 AgentAction create_message [mcp.client.sampling] status=error latency=1066.44ms\n  \u2022 AgentAction create_message [mcp.client.sampling] status=error latency=1309.38ms"
+  },
+  "structured_features": {
+    "payload_length": 85.0,
+    "latency_ms": 0.0,
+    "token_estimate": 10.0,
+    "call_frequency": 3.0
+  },
+  "proxy_shap": {
+    "model": "sklearn_logreg",
+    "baseline_value": 0.00928,
+    "predicted_error_proba": 0.38205,
+    "values": {
+      "payload_length": 0.15303,
+      "latency_ms": 0.05663,
+      "token_estimate": 0.08551,
+      "call_frequency": 0.07761
+    },
+    "most_influential_feature": "payload_length"
+  },
+  "proxy_lime": {
+    "model": "sklearn_tfidf_logreg",
+    "base_confidence": 0.53074,
+    "n_samples": 150,
+    "n_tokens_analyzed": 10,
+    "token_importances": [
+      {
+        "token": "injected",
+        "coefficient": 0.14523
+      },
+      {
+        "token": "remote_crag_tool",
+        "coefficient": 0.04794
+      },
+      {
+        "token": "fault",
+        "coefficient": 0.04126
+      },
+      {
+        "token": "transient",
+        "coefficient": -0.02921
+      },
+      {
+        "token": "http",
+        "coefficient": 0.01706
+      },
+      {
+        "token": "like",
+        "coefficient": -0.01135
+      },
+      {
+        "token": "retry",
+        "coefficient": 0.00548
+      },
+      {
+        "token": "attempt",
+        "coefficient": 0.0038
+      },
+      {
+        "token": "429",
+        "coefficient": -0.00145
+      },
+      {
+        "token": "retrying",
+        "coefficient": 0.001
+      }
+    ],
+    "most_influential_token": "injected"
+  },
+  "summary": "Targeted failure mode \u2192 resilience.remote_crag_tool / retry_attempt [error]: anomalous trace. Proxy SHAP attributes the structured skew primarily to 'payload_length' (predicted error confidence 0.38205). Proxy LIME flags the token 'injected' as the strongest local text driver. Graph context: 12 adjacent AgentAction(s) and 0 MCPServerCall(s) hydrated via neo4j_aura."
+}

@@ -1,17 +1,20 @@
-**Hierarchical Log Persistence and Graph Knowledge Mapping.** 
+**Resilient Client Orchestration, Edgeless State Routing, and Graph-Contextual Explainability Audits.**
 
 A production-grade **uv monorepo** spanning three decoupled processes:
 
 1. **`mcp_server`** — FastMCP server exposing a **Reflection Tool** (MCP Sampling) and a
    **Hierarchical CRAG Resource** (LLM Tree-of-Thought grading via Sampling + Tavily
    fallback) over `streamable-http`.
-2. **`agent_client`** — a LangChain agent (`create_agent`) that consumes the server, and
-   (Stage 3) persists every MCP interaction into an **embedded, vector-enabled LangGraph
-   SQLite log store** using hierarchical namespaces.
-3. **`analysis_dashboard`** — a **decoupled Log Analysis Agent** (LangChain `create_agent`)
-   that semantically searches the logs, projects causal execution paths into a **Neo4j
-   Aura DB** knowledge graph, computes performance trends (matplotlib/seaborn), and serves
-   an interactive **Streamlit** diagnostic dashboard.
+2. **`agent_client`** — a LangChain agent (`create_agent`) that consumes the server and
+   persists every MCP interaction into an **embedded, vector-enabled LangGraph SQLite log
+   store**. **(Stage 4)** its execution layer is hardened with `RunnableWithRetry`
+   (exponential backoff + jitter), declarative self-healing `RunnableWithFallbacks` (LLM
+   reinjection), and a hardcoded absolute fallback that returns a deterministic payload.
+3. **`analysis_dashboard`** — a **decoupled Log Analysis Agent** rebuilt **(Stage 4)** as an
+   **edgeless LangGraph `StateGraph`** (one `START` edge; all hops via `Command(goto=…)`).
+   It semantically searches the logs, projects causal paths into **Neo4j Aura DB**, computes
+   trends, and runs **graph-contextual explainability audits** (proxy **SHAP** + **LIME**),
+   served through an upgraded **Streamlit** XAI control room.
 
 Built on **LangChain 1.x** (`langchain`, `langchain-classic`, `langchain-tavily`,
 `langsmith`, `langgraph`), **Groq** for inference, **fastembed** for local embeddings.
@@ -30,23 +33,28 @@ Decentralized-Tooling-via-the-Model-Context-Protocol-MCP-and-Corrective-RAG/
 │   └── src/mcp_server/
 │       ├── server.py               ← FastMCP server (tool + resource)
 │       └── knowledge_base.py       ← hierarchical knowledge base
+├── explainability_audit_report.json ← Stage 4 XAI audit export (token/feature influence)
 ├── agent_client/
 │   └── src/agent_client/
 │       ├── logger.py               ← dual-stream flat logging
 │       ├── embeddings.py           ← local FastEmbed wrapper (384-dim)
 │       ├── session.py              ← per-run session UUID
 │       ├── log_store.py            ← vector SQLite store + LogEntry schema + guardrails
-│       ├── mcp_client.py           ← FastMCP client, sampling handler, instrumented @tools
-│       └── main.py                 ← create_agent entrypoint (multi-turn, vector-logged)
+│       ├── resilience.py           ← (Stage 4) RunnableWithRetry + self-healing fallbacks + counters
+│       ├── mcp_client.py           ← FastMCP client, sampling handler, resilient @tools
+│       └── main.py                 ← create_agent entrypoint + resilience demo (vector-logged)
 └── analysis_dashboard/
     └── src/analysis_dashboard/
         ├── embeddings.py           ← mirror of the client embedding config
         ├── store_reader.py         ← read-side store accessor (int-key guardrail)
         ├── log_retrieval.py        ← semantic_log_search @tool
         ├── graph_mapper.py         ← Neo4j projection + sync_knowledge_graph @tool
+        ├── graph_context.py        ← (Stage 4) Neo4j subgraph hydration + log-derived fallback
+        ├── explainability.py       ← (Stage 4) proxy SHAP/LIME + surrogate scorers + audit export
+        ├── edgeless_agent.py       ← (Stage 4) edgeless StateGraph (Command goto routing)
         ├── trend_tools.py          ← latency / token / error analytics + charts
-        ├── agent.py                ← Log Analysis Agent (create_agent) + CLI
-        └── app.py                  ← Streamlit diagnostic dashboard
+        ├── agent.py                ← edgeless Log Analysis Agent façade + CLI
+        └── app.py                  ← (Stage 4) Streamlit XAI control room
 ```
 
 ---
@@ -72,6 +80,13 @@ External services:
 ```bash
 # From the repo root — installs all three packages into one .venv
 uv sync --all-packages
+```
+
+The Stage 4 explainability/ML packages are declared in `analysis_dashboard` and were
+added cleanly via `uv add` (no `pip`, no vendoring):
+
+```bash
+uv add --package analysis-dashboard numpy scikit-learn lime shap
 ```
 
 ### Neo4j Aura DB (free) setup
@@ -244,32 +259,82 @@ RETURN s, a, c LIMIT 50;
 
 ---
 
+## Stage 4 — Resilience, Edgeless Routing & Explainability
+
+### Resilient client orchestration (`agent_client`)
+
+```
+                ┌─────────────── resilient MCP tool chain ───────────────┐
+ agent ──tool──►│  primary  .with_retry(exp-backoff+jitter, MAX_RETR_ATTEMPTS) │
+                │     │ transient (429/socket/DNS) → retried                    │
+                │     │ application error / bad payload ─────────────┐          │
+                │     ▼                                              ▼          │
+                │  .with_fallbacks([ self_heal,  hardcoded ], exception_key=    │
+                │                    │            │            "error_trace")    │
+                │     LLM reinjection│            │ never raises → logs the      │
+                │     loop, re-drive │            │ catastrophe + returns a      │
+                │     primary        │            │ deterministic safe payload   │
+                └─────────────────────────────────────────────────────────────┘
+   • Primary LLM (MCP Sampling) wrapped with RunnableWithRetry.
+   • Every fallback / self-heal / retry is logged to ("logs","resilience",*).
+```
+
+Demonstrate it (writes verifiable fallback-activation traces to the logs/DB):
+
+```bash
+# transient → recovered by retry · application → recovered by self-heal · catastrophic → hardcoded
+MCP_RESILIENCE_DEMO=1 uv run --package agent-client agent-client
+```
+
+### Edgeless analysis graph (`analysis_dashboard`)
+
+The Log Analysis Agent is a LangGraph `StateGraph` with **exactly one** static edge —
+`builder.add_edge(START, "initial_ingest_node")`. Every other hop is a
+`Command(goto=…)` computed inside the node from a dynamic plan queue:
+
+```
+START → initial_ingest_node ─Command(goto)→ {semantic_search │ trend │ graph_sync │ explainability} ─Command(goto)→ synthesis_node → END
+```
+
+### Graph-contextual explainability audits
+
+`explainability_node` reads a target failure trace, hydrates its adjacent subgraph
+(Neo4j Aura → log-derived fallback), then computes **proxy SHAP** (exact Shapley
+values over a surrogate of `payload_length / latency_ms / token_estimate /
+call_frequency`) and **proxy LIME** (token-masking perturbation → locality-weighted
+linear coefficients), exporting `explainability_audit_report.json`.
+
+---
+
 ## Deliverable artifacts (generated at runtime)
 
 | File | Produced by |
 |---|---|
-| `mcp_agent_system.log` | `agent-client` — flat dual-stream `[CLIENT]`/`[SERVER]` log |
-| `mcp_agent_log.db` | `agent-client` — vector-enabled SQLite log store |
-| `analysis_agent.log` | `analysis-agent` / dashboard — analysis execution log |
-| `charts/*.png` | trend tools — latency / token / error charts |
+| `mcp_agent_system.log` | `agent-client` — flat dual-stream `[CLIENT]`/`[SERVER]` log incl. fallback activations |
+| `mcp_agent_log.db` | `agent-client` — vector-enabled SQLite log store (incl. `resilience.*` events) |
+| `analysis_agent.log` | `analysis-agent` / dashboard — edgeless analysis execution log |
+| `charts/*.png` | trend tools + proxy-SHAP feature-weight bar chart |
+| `explainability_audit_report.json` | analysis agent — token-importance arrays + relational graph metadata for a targeted failure mode |
 
 ---
 
 ## Screenshots
 
-Evidence of a successful end-to-end run. The **primary deliverable is the Streamlit
-dashboard** captured in a real browser as a **full-window** screenshot showing the
-**executing machine's clock** — the dashboard renders its own `🕒 Executing-machine time`
-banner at the top of the page, so the timestamp is visible both in-app and in the OS menu
-bar. See [`screenshots/`](screenshots/) for the capture checklist and the full index.
+Evidence of a successful end-to-end run. The **primary Stage 4 deliverable is a full-UI
+screenshot of the explainability Audit execution loop** on the upgraded Streamlit app,
+captured in a real browser with the **executing machine's clock visible** — the dashboard
+renders its own `🕒 Executing-machine time` banner, so the timestamp shows both in-app and
+in the OS menu bar. See [`screenshots/`](screenshots/) for the capture checklist.
 
 | # | Capture | Shows |
 |---|---|---|
-| 1 | `01-dashboard-full-ui.png` | Full Streamlit dashboard (clock banner, sidebar, reasoning trace, trend chart, diagnosis) — OS clock visible |
-| 2 | `02-dashboard-graph-sync.png` | Dashboard Neo4j sync notification (committed nodes/edges) — OS clock visible |
-| 3 | `03-agent-client-trace.png` | `agent_client` multi-turn tool-calling trace |
-| 4 | `04-mcp-server-protocol.png` | `mcp_server` streamable-http protocol + MCP Sampling round-trips |
-| 5 | `05-neo4j-aura-graph.png` | Neo4j Aura projected `(:Session)-[:TRIGGERED]->(:AgentAction)-[:ROUTED_TO]->(:MCPServerCall)` graph |
+| 1 | `01-audit-execution-loop.png` (+ `-2…-4`) | **Audit Hub** after running an Explainability Audit Report — SHAP bar chart, LIME token annotations, graph context, clock banner — OS clock visible |
+| 2 | `02-resilience-panel.png` (+ `-2`) | Sidebar **Resilience tracking** panel (fallback / self-healing / retry / hardcoded counts) — OS clock visible |
+| 3 | `03-edgeless-diagnostics.png` (+ `-2…-7`) | Diagnostics tab showing the **edgeless route** (`Command goto` hop trace) + rendered charts |
+
+> Terminal-side resilience evidence (retry → self-heal → hardcoded recoveries, and the
+> MCP streamable-http / Sampling round-trips) is captured in `mcp_agent_system.log` and
+> `mcp_agent_log.db` (the `resilience.*` namespace).
 
 ---
 

@@ -26,6 +26,10 @@ dependencies    = [
     "pandas>=2.2",
     "pydantic>=2.8.0",
     "python-dotenv>=1.0",
+    "numpy>=2.4.6",
+    "scikit-learn>=1.9.0",
+    "lime>=0.2.0.1",
+    "shap>=0.51.0",
 ]
 
 [project.scripts]

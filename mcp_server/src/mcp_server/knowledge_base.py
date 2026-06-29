@@ -154,7 +154,7 @@ KNOWLEDGE_BASE: dict[str, list[dict[str, Any]]] = {
             "content": (
                 "MCP transport options:\n"
                 "• stdio           : Local subprocess. Simple, no networking. Suitable for "
-                "desktop AI assistants like Claude Desktop.\n"
+                "local desktop AI assistants and MCP-compatible IDE clients.\n"
                 "• streamable-http : HTTP + Server-Sent Events. Stateless per-request; "
                 "supports concurrent clients, NAT traversal, cloud deployment.\n"
                 "FastMCP setup: mcp.run(transport='streamable-http', host='0.0.0.0', port=8000)\n"
